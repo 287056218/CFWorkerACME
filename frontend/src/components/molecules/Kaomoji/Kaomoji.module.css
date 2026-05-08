@@ -1,0 +1,13 @@
+.kaomoji {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--text-2);
+  user-select: none;
+}
+
+.inline {
+  display: inline;
+}

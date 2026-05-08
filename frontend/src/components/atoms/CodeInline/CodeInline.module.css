@@ -1,0 +1,53 @@
+.code {
+  display: inline-block;
+  padding: 2px 8px;
+  font-family: var(--font-display);
+  font-size: 0.9em;
+  font-weight: var(--fw-medium);
+  font-feature-settings: 'ss01', 'cv11';
+  background: var(--bg-code);
+  border-radius: 8px;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+  word-break: break-all;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.color-default {
+  color: var(--text-1);
+  background: var(--bg-code);
+}
+
+.color-brand {
+  color: var(--brand-ink);
+  background: var(--brand-softer);
+}
+
+.color-accent {
+  color: var(--accent-ink);
+  background: var(--accent-softer);
+}
+
+.color-sakura {
+  color: var(--sakura);
+  background: var(--sakura-soft);
+}
+
+.color-lavender {
+  color: var(--lavender);
+  background: var(--lavender-soft);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  filter: brightness(0.96);
+  box-shadow: var(--shadow-inset);
+}
+
+:root[data-theme='dark'] .clickable:hover {
+  filter: brightness(1.1);
+}

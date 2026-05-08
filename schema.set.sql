@@ -1,12 +1,14 @@
 CREATE TABLE IF NOT EXISTS Users
 (
-    mail TEXT NOT NULL PRIMARY KEY UNIQUE,
-    flag TEXT (1) DEFAULT (0) NOT NULL,
-    code TEXT (8),
-    keys TEXT,
-    pass TEXT,
-    apis TEXT,
-    time INTEGER
+    mail     TEXT NOT NULL PRIMARY KEY UNIQUE,
+    flag     TEXT (1) DEFAULT (0) NOT NULL,
+    code     TEXT (8),
+    keys     TEXT,
+    pass     TEXT,
+    apis     TEXT,
+    time     INTEGER,
+    is_admin INTEGER(1) NOT NULL DEFAULT 0,
+    quota    INTEGER    NOT NULL DEFAULT -1
 );
 
 
@@ -27,3 +29,11 @@ CREATE TABLE IF NOT EXISTS Apply
     data TEXT,
     text TEXT
 );
+
+CREATE TABLE IF NOT EXISTS Confs
+(
+    name TEXT NOT NULL PRIMARY KEY UNIQUE,
+    data TEXT,
+    time INTEGER
+);
+

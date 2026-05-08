@@ -1,0 +1,480 @@
+/* ============================================================
+ * CertHub · Ant Design 深度覆盖
+ * 目的：让 AntD 组件完全融入 Cyber-Kawaii Terminal 风格
+ * ============================================================ */
+
+/* ---------- Button ---------- */
+.ant-btn {
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.01em;
+  transition: all var(--duration-base) var(--ease-out) !important;
+}
+
+.ant-btn:not(.ant-btn-circle):not(.ant-btn-icon-only) {
+  padding-inline: 18px;
+}
+
+.ant-btn-primary {
+  background: var(--gradient-brand) !important;
+  border: none !important;
+  box-shadow: 0 4px 14px var(--brand-glow), 0 0 0 0 var(--brand-soft) !important;
+}
+
+.ant-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--brand-glow), 0 0 0 4px var(--brand-soft) !important;
+  filter: brightness(1.05);
+}
+
+.ant-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.ant-btn-default {
+  background: var(--bg-panel) !important;
+  border-color: var(--line) !important;
+  color: var(--text-1) !important;
+}
+
+.ant-btn-default:hover:not(:disabled) {
+  border-color: var(--brand) !important;
+  color: var(--brand-ink) !important;
+  background: var(--bg-panel) !important;
+}
+
+.ant-btn-dangerous {
+  border-color: var(--err) !important;
+  color: var(--err) !important;
+}
+
+/* ---------- Input ---------- */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-input-password {
+  background: var(--bg-panel) !important;
+  border-color: var(--line) !important;
+  color: var(--text-1) !important;
+  transition: all var(--duration-base) var(--ease-out) !important;
+}
+
+.ant-input::placeholder,
+.ant-input-affix-wrapper input::placeholder {
+  color: var(--text-3) !important;
+}
+
+.ant-input:hover,
+.ant-input-affix-wrapper:hover,
+.ant-input-password:hover {
+  border-color: var(--brand) !important;
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px var(--brand-soft) !important;
+}
+
+/* ---------- Select ---------- */
+.ant-select .ant-select-selector {
+  background: var(--bg-panel) !important;
+  border-color: var(--line) !important;
+  color: var(--text-1) !important;
+}
+
+.ant-select:hover:not(.ant-select-disabled) .ant-select-selector {
+  border-color: var(--brand) !important;
+}
+
+.ant-select-focused .ant-select-selector {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px var(--brand-soft) !important;
+}
+
+.ant-select-dropdown {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.ant-select-item {
+  color: var(--text-1) !important;
+  border-radius: var(--radius-sm) !important;
+  margin: 2px 4px !important;
+}
+
+.ant-select-item-option-active {
+  background: var(--brand-softer) !important;
+}
+
+.ant-select-item-option-selected {
+  background: var(--brand-soft) !important;
+  color: var(--brand-ink) !important;
+  font-weight: var(--fw-semibold) !important;
+}
+
+/* ---------- Table ---------- */
+.ant-table {
+  background: transparent !important;
+  color: var(--text-1) !important;
+  font-family: var(--font-body) !important;
+}
+
+.ant-table-container {
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.ant-table-thead > tr > th {
+  background: var(--bg-code) !important;
+  color: var(--text-2) !important;
+  font-weight: var(--fw-semibold) !important;
+  font-family: var(--font-display) !important;
+  font-size: var(--fs-xs) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.ant-table-tbody > tr > td {
+  background: var(--bg-panel) !important;
+  border-bottom: 1px solid var(--line-soft) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--brand-softer) !important;
+}
+
+.ant-table-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+
+/* ---------- Modal ---------- */
+.ant-modal .ant-modal-content {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-panel) !important;
+  box-shadow: var(--shadow-xl) !important;
+  padding: var(--space-6) !important;
+}
+
+.ant-modal .ant-modal-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--line-soft) !important;
+  padding-bottom: var(--space-4) !important;
+  margin-bottom: var(--space-4) !important;
+}
+
+.ant-modal .ant-modal-title {
+  color: var(--text-1) !important;
+  font-weight: var(--fw-semibold) !important;
+}
+
+.ant-modal .ant-modal-close {
+  color: var(--text-3) !important;
+}
+
+.ant-modal .ant-modal-close:hover {
+  color: var(--text-1) !important;
+  background: var(--brand-softer) !important;
+}
+
+/* ---------- Message & Notification ---------- */
+.ant-message-notice-content {
+  background: var(--bg-panel) !important;
+  color: var(--text-1) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-pill) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 8px 18px !important;
+  font-weight: var(--fw-medium) !important;
+}
+
+.ant-notification-notice {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.ant-notification-notice-message,
+.ant-notification-notice-description {
+  color: var(--text-1) !important;
+}
+
+/* ---------- Tag ---------- */
+.ant-tag {
+  border-radius: var(--radius-pill) !important;
+  padding: 2px 10px !important;
+  font-weight: var(--fw-medium) !important;
+  font-size: var(--fs-xs) !important;
+  border: 1px solid transparent !important;
+}
+
+/* ---------- Card ---------- */
+.ant-card {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-card) !important;
+  transition: all var(--duration-base) var(--ease-out) !important;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid var(--line-soft) !important;
+  color: var(--text-1) !important;
+}
+
+.ant-card-head-title {
+  color: var(--text-1) !important;
+  font-weight: var(--fw-semibold) !important;
+}
+
+/* ---------- Drawer ---------- */
+.ant-drawer .ant-drawer-content {
+  background: var(--bg-panel) !important;
+}
+
+.ant-drawer .ant-drawer-header {
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.ant-drawer .ant-drawer-title {
+  color: var(--text-1) !important;
+}
+
+/* ---------- Switch ---------- */
+.ant-switch {
+  background: var(--line-strong) !important;
+}
+
+.ant-switch.ant-switch-checked {
+  background: var(--brand) !important;
+}
+
+/* ---------- Segmented ---------- */
+.ant-segmented {
+  background: var(--bg-code) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-pill) !important;
+  padding: 3px !important;
+}
+
+.ant-segmented-item {
+  border-radius: var(--radius-pill) !important;
+  color: var(--text-2) !important;
+  font-weight: var(--fw-medium) !important;
+}
+
+.ant-segmented-item-selected {
+  background: var(--bg-panel) !important;
+  color: var(--brand-ink) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* 让 Segmented 项内的内容（含纯图标）始终居中 */
+.ant-segmented-item-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px;
+  min-height: 28px;
+  line-height: 1 !important;
+}
+
+.ant-segmented-item-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-inline-end: 0 !important;
+}
+
+/* 图标 + 文字的组合保留 6px 间距 */
+.ant-segmented-item-icon + * {
+  margin-inline-start: 6px;
+}
+
+/* ---------- Tabs ---------- */
+.ant-tabs .ant-tabs-tab {
+  color: var(--text-2) !important;
+  font-weight: var(--fw-medium) !important;
+}
+
+.ant-tabs .ant-tabs-tab:hover {
+  color: var(--brand-ink) !important;
+}
+
+.ant-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--brand-ink) !important;
+  font-weight: var(--fw-semibold) !important;
+}
+
+.ant-tabs .ant-tabs-ink-bar {
+  background: var(--brand) !important;
+}
+
+/* ---------- Form ---------- */
+.ant-form-item-label > label {
+  color: var(--text-2) !important;
+  font-weight: var(--fw-medium) !important;
+}
+
+.ant-form-item-explain-error {
+  color: var(--err) !important;
+  font-size: var(--fs-xs) !important;
+}
+
+/* ---------- Skeleton ---------- */
+.ant-skeleton-element .ant-skeleton-button,
+.ant-skeleton-element .ant-skeleton-input,
+.ant-skeleton-element .ant-skeleton-image {
+  background: linear-gradient(
+    90deg,
+    var(--bg-code) 25%,
+    var(--line-soft) 50%,
+    var(--bg-code) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer 1.5s ease-in-out infinite !important;
+  border-radius: var(--radius-md) !important;
+}
+
+/* ---------- Empty ---------- */
+.ant-empty-description {
+  color: var(--text-3) !important;
+  font-family: var(--font-chinese) !important;
+}
+
+/* ---------- Descriptions ---------- */
+.ant-descriptions .ant-descriptions-item-label {
+  color: var(--text-3) !important;
+  font-family: var(--font-display) !important;
+  font-size: var(--fs-xs) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.ant-descriptions .ant-descriptions-item-content {
+  color: var(--text-1) !important;
+}
+
+/* ---------- Popover & Tooltip ---------- */
+.ant-tooltip-inner {
+  background: var(--text-1) !important;
+  color: var(--bg-panel) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: var(--fs-xs) !important;
+  padding: 6px 10px !important;
+}
+
+.ant-tooltip-arrow::before {
+  background: var(--text-1) !important;
+}
+
+.ant-popover-inner {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ---------- Dropdown ---------- */
+.ant-dropdown .ant-dropdown-menu {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 4px !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item {
+  color: var(--text-1) !important;
+  border-radius: var(--radius-sm) !important;
+  margin: 1px 0 !important;
+}
+
+.ant-dropdown .ant-dropdown-menu-item:hover {
+  background: var(--brand-softer) !important;
+  color: var(--brand-ink) !important;
+}
+
+/* ---------- Radio ---------- */
+.ant-radio-wrapper .ant-radio-inner {
+  border-color: var(--line-strong) !important;
+  background: var(--bg-panel) !important;
+}
+
+.ant-radio-wrapper:hover .ant-radio-inner {
+  border-color: var(--brand) !important;
+}
+
+.ant-radio-checked .ant-radio-inner {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+}
+
+/* ---------- Checkbox ---------- */
+.ant-checkbox-wrapper .ant-checkbox-inner {
+  border-color: var(--line-strong) !important;
+  background: var(--bg-panel) !important;
+  border-radius: 6px !important;
+}
+
+.ant-checkbox-wrapper:hover .ant-checkbox-inner {
+  border-color: var(--brand) !important;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+}
+
+/* ---------- Progress ---------- */
+.ant-progress .ant-progress-inner {
+  background: var(--bg-code) !important;
+}
+
+.ant-progress .ant-progress-bg {
+  background: var(--gradient-brand) !important;
+}
+
+/* ---------- Steps ---------- */
+.ant-steps .ant-steps-item-title {
+  color: var(--text-1) !important;
+}
+
+.ant-steps .ant-steps-item-description {
+  color: var(--text-3) !important;
+}
+
+.ant-steps .ant-steps-item-process .ant-steps-item-icon {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+}
+
+.ant-steps .ant-steps-item-finish .ant-steps-item-icon {
+  background: var(--bg-panel) !important;
+  border-color: var(--brand) !important;
+}
+
+.ant-steps .ant-steps-item-finish .ant-steps-item-icon .ant-steps-icon {
+  color: var(--brand) !important;
+}
+
+/* ---------- Collapse ---------- */
+.ant-collapse {
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-card) !important;
+}
+
+.ant-collapse > .ant-collapse-item > .ant-collapse-header {
+  color: var(--text-1) !important;
+  font-weight: var(--fw-semibold) !important;
+}
+
+.ant-collapse-content {
+  background: var(--bg-canvas) !important;
+  border-top: 1px solid var(--line-soft) !important;
+  color: var(--text-1) !important;
+}

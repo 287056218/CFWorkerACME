@@ -11,7 +11,10 @@ CREATE TABLE Users
     keys TEXT,     -- ACME账号的密钥
     pass TEXT,     -- 登录密码SHA256
     apis TEXT,     -- 证书下载鉴权码
-    time INTEGER   -- 邮件验证时间
+    time INTEGER,  -- 邮件验证时间
+    -- 管理员与配额 ----------------------
+    is_admin INTEGER(1) NOT NULL DEFAULT 0, -- 是否管理员 0-否 1-是
+    quota    INTEGER    NOT NULL DEFAULT -1 -- 证书配额 -1 不限制 >=0 最大有效证书数
 );
 
 
@@ -64,3 +67,11 @@ CREATE TABLE Apply
 --     name TEXT    NOT NULL,
 --     data TEXT    NOT NULL
 -- );
+
+-- 系统配置表：键值对 + 时间戳，所有 key 以 Confs→env→默认值 三级回退
+CREATE TABLE Confs
+(
+    name TEXT NOT NULL PRIMARY KEY UNIQUE, -- 配置项名
+    data TEXT,                             -- 配置值 (文本/JSON 字符串)
+    time INTEGER                           -- 最近一次写入时间戳
+);

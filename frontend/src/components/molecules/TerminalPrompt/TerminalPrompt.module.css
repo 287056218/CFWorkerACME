@@ -1,0 +1,56 @@
+.prompt {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  user-select: none;
+  color: var(--text-2);
+}
+
+.user {
+  color: var(--term-user);
+  font-weight: var(--fw-semibold);
+}
+
+.at {
+  color: var(--term-at);
+  opacity: 0.7;
+}
+
+.host {
+  color: var(--term-host);
+  font-weight: var(--fw-semibold);
+}
+
+.colon {
+  color: var(--term-colon);
+  opacity: 0.7;
+}
+
+.path {
+  color: var(--term-path);
+  font-weight: var(--fw-medium);
+}
+
+.symbol {
+  color: var(--term-dollar);
+  font-weight: var(--fw-bold);
+}
+
+.suffix {
+  color: var(--text-1);
+  font-weight: var(--fw-normal);
+  font-family: var(--font-body);
+  margin-right: 4px;
+}
+
+.cursor {
+  display: inline-block;
+  color: var(--brand);
+  animation: blink 1s steps(1) infinite;
+  line-height: 1;
+  font-size: 0.9em;
+}

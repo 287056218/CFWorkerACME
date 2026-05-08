@@ -1,0 +1,140 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  transition: all var(--duration-fast) var(--ease-out);
+  line-height: 1;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.text {
+  line-height: 1;
+}
+
+/* 尺寸 */
+.size-xs {
+  padding: 2px 8px;
+  font-size: 11px;
+  gap: 3px;
+}
+
+.size-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.size-md {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+/* 变体 —— 软色背景 + 深色文字（默认） */
+.variant-brand {
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+.variant-accent {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.variant-ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.variant-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.variant-err {
+  background: var(--err-soft);
+  color: var(--err);
+}
+.variant-info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.variant-neutral {
+  background: var(--bg-code);
+  color: var(--text-2);
+}
+.variant-sakura {
+  background: var(--sakura-soft);
+  color: var(--sakura);
+}
+.variant-lavender {
+  background: var(--lavender-soft);
+  color: var(--lavender);
+}
+.variant-lemon {
+  background: var(--lemon-soft);
+  color: var(--lemon);
+}
+
+:root[data-theme='dark'] .variant-neutral {
+  color: var(--text-1);
+}
+:root[data-theme='dark'] .variant-sakura {
+  color: var(--sakura);
+}
+:root[data-theme='dark'] .variant-lemon {
+  color: var(--lemon);
+}
+
+/* 实色变体 */
+.solid.variant-brand {
+  background: var(--brand);
+  color: var(--text-on-brand);
+}
+.solid.variant-accent {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.solid.variant-ok {
+  background: var(--ok);
+  color: #fff;
+}
+.solid.variant-warn {
+  background: var(--warn);
+  color: #fff;
+}
+.solid.variant-err {
+  background: var(--err);
+  color: #fff;
+}
+.solid.variant-info {
+  background: var(--info);
+  color: #fff;
+}
+.solid.variant-neutral {
+  background: var(--text-2);
+  color: var(--bg-panel);
+}
+
+/* 边框变体 */
+.outlined {
+  background: transparent !important;
+  border: 1px solid currentColor;
+}
+
+/* 可点击 */
+.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.clickable:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.clickable:active {
+  transform: translateY(0);
+}

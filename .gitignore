@@ -41,3 +41,5 @@ wrangler.oplists.jsonc
 .tef_dist/*
 
 /.idea/*
+.codebuddy
+public

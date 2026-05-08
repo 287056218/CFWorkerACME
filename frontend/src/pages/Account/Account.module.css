@@ -1,0 +1,21 @@
+.greet {
+  padding: 8px 0 20px;
+}
+
+.cmdText {
+  font-family: var(--font-display);
+  color: var(--text-1);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 12px;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,64 @@
+.divider {
+  display: block;
+  flex-shrink: 0;
+}
+
+.horizontal {
+  width: 100%;
+  height: 1px;
+}
+
+.vertical {
+  width: 1px;
+  height: 1em;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.variant-solid {
+  background: var(--line);
+}
+
+.variant-dashed.horizontal {
+  background: none;
+  border-top: 1px dashed var(--line-dashed);
+  height: 0;
+}
+
+.variant-dashed.vertical {
+  background: none;
+  border-left: 1px dashed var(--line-dashed);
+  width: 0;
+}
+
+.variant-dotted.horizontal {
+  background: none;
+  border-top: 1px dotted var(--line-dashed);
+  height: 0;
+}
+
+.variant-dotted.vertical {
+  background: none;
+  border-left: 1px dotted var(--line-dashed);
+  width: 0;
+}
+
+.variant-gradient.horizontal {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--line-strong) 20%,
+    var(--line-strong) 80%,
+    transparent
+  );
+}
+
+.variant-gradient.vertical {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--line-strong) 20%,
+    var(--line-strong) 80%,
+    transparent
+  );
+}

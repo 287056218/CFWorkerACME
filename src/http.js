@@ -5,7 +5,11 @@
 const {createHmac, createSign, constants: {RSA_PKCS1_PADDING}} = require('crypto');
 const {getJwk} = require('./crypto');
 const {log} = require('./logger');
-const axios = require('./axios');
+// 注意：此文件会在构建/安装阶段被 patch-package 覆盖到
+// node_modules/acme-client/src/http.js，用 xior 替代原版 axios，
+// 以便在 Cloudflare Workers 等无 Node http adapter 的环境下正常工作。
+// 因此这里不再 require('./axios')，避免在 Workers 环境意外触发
+// axios 默认 http adapter 导致 "adapter http is not available in the build" 错误。
 import xior from 'xior';
 
 /**

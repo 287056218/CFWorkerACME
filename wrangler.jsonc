@@ -7,9 +7,11 @@
     "nodejs_compat"
   ],
   "vars": {
+    "DB_SOURCE": "d1",
     "MAIL_KEYS": "",
     "MAIL_SEND": "noreply@example.com",
     "AUTH_KEYS": "",
+    "SITE_KEYS": "",
     "DCV_AGENT": "",
     "DCV_EMAIL": "account@example.com",
     "DCV_TOKEN": "",

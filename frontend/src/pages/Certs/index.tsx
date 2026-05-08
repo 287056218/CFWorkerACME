@@ -1,0 +1,682 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { App, Button, Empty, Input, Segmented, Skeleton } from 'antd';
+import {
+  ArrowRight,
+  Archive,
+  Clock,
+  Download,
+  FileLock2,
+  FileStack,
+  Key,
+  KeyRound,
+  LayoutGrid,
+  List,
+  Plus,
+  Search,
+  Shield,
+  ShieldOff,
+  Trash2,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import PageShell from '@components/Layout/PageShell';
+import SectionHeader from '@components/Layout/SectionHeader';
+import TerminalPrompt from '@components/molecules/TerminalPrompt';
+import EmptyState from '@components/molecules/EmptyState';
+import StatusPulse from '@components/molecules/StatusPulse';
+import Pill from '@components/atoms/Pill';
+import CodeInline from '@components/atoms/CodeInline';
+import { listOrders, operateOrder } from '@api/order';
+import type { OrderRaw } from '@api/types';
+import {
+  FLAG_MAP,
+  SIGN_SHORT_MAP,
+  TYPE_MAP,
+} from '@utils/constants';
+import {
+  downloadAsFile,
+  fmtDate,
+  fmtRelative,
+  safeJsonParse,
+  shortenId,
+} from '@utils/format';
+import { classifyFlag, expiredDays, remainDays, type OrderStatus } from '@utils/order';
+import { randomKaomoji } from '@utils/kaomoji';
+import { handleDownloadZip, handleDownloadPfx } from '@utils/certDownload';
+import styles from './Certs.module.css';
+
+type View = 'card' | 'list';
+type FilterType = 'all' | 'active' | 'pending' | 'expired' | 'failed';
+
+const FILTER_OPTIONS = [
+  { label: '全部', value: 'all' },
+  { label: '已签发', value: 'active' },
+  { label: '处理中', value: 'pending' },
+  { label: '已过期', value: 'expired' },
+  { label: '已失效', value: 'failed' },
+];
+
+/** 由 OrderStatus 映射到色彩 token（背景条/Pill） */
+const STATUS_COLOR: Record<OrderStatus, string> = {
+  pending: 'info',
+  verifying: 'info',
+  signed: 'ok',
+  expired: 'warn',
+  failed: 'err',
+};
+
+/** OrderStatus → StatusPulse 状态 */
+const STATUS_PULSE: Record<
+  OrderStatus,
+  'pending' | 'verifying' | 'success' | 'failed' | 'expired'
+> = {
+  pending: 'pending',
+  verifying: 'verifying',
+  signed: 'success',
+  expired: 'expired',
+  failed: 'failed',
+};
+
+/** OrderStatus → 中文标签 */
+const STATUS_TEXT: Record<OrderStatus, string> = {
+  pending: '待验证',
+  verifying: '验证中',
+  signed: '已签发',
+  expired: '已过期',
+  failed: '已失效',
+};
+
+export default function Certs() {
+  const { message, modal } = App.useApp();
+  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<OrderRaw[]>([]);
+  const [view, setView] = useState<View>('card');
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<FilterType>('all');
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await listOrders();
+      setOrders(data || []);
+    } catch {
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const filtered = useMemo(() => {
+    return orders.filter((o) => {
+      const status = classifyFlag(o);
+      // 按状态过滤
+      if (filter === 'active' && status !== 'signed') return false;
+      if (
+        filter === 'pending' &&
+        status !== 'pending' &&
+        status !== 'verifying'
+      )
+        return false;
+      if (filter === 'expired' && status !== 'expired') return false;
+      if (filter === 'failed' && status !== 'failed') return false;
+
+      // 按搜索过滤
+      if (query.trim()) {
+        const q = query.toLowerCase();
+        const list = safeJsonParse<Array<{ name: string }>>(o.list) || [];
+        const domainStr = list.map((d) => d.name).join(',').toLowerCase();
+        if (
+          !domainStr.includes(q) &&
+          !o.uuid.toLowerCase().includes(q)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [orders, filter, query]);
+
+  const handleDownload = async (uuid: string, type: 'cert' | 'key') => {
+    try {
+      const content = await operateOrder(
+        uuid,
+        type === 'cert' ? 'ca_get' : 'ca_key',
+      );
+      if (!content) {
+        message.warning('证书或密钥不存在');
+        return;
+      }
+      downloadAsFile(
+        content,
+        `${uuid}.${type === 'cert' ? 'crt' : 'pem'}`,
+      );
+      message.success('下载成功 ✨');
+    } catch {
+      /* 拦截器已 toast */
+    }
+  };
+
+  const handleDelete = (uuid: string) => {
+    modal.confirm({
+      title: '确认删除订单？',
+      content:
+        '该订单的所有信息将被永久删除，包含证书、私钥、验证记录等。此操作不可恢复。',
+      okText: '确认删除',
+      cancelText: '取消',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await operateOrder(uuid, 'cancel');
+          message.success(`订单已删除 ${randomKaomoji('success')}`);
+          load();
+        } catch {
+          /* 拦截器已 toast */
+        }
+      },
+    });
+  };
+
+  const handleRemoveKey = (uuid: string) => {
+    modal.confirm({
+      title: '确认清空私钥？',
+      content:
+        '私钥清空后将无法再下载，也无法使用私钥续期/吊销证书；证书本身仍可保留。此操作不可恢复，请先确保已保存本地副本。',
+      okText: '确认清空',
+      cancelText: '取消',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await operateOrder(uuid, 'rm_key');
+          message.success(`私钥已清空 ${randomKaomoji('success')}`);
+          load();
+        } catch {
+          /* 拦截器已 toast */
+        }
+      },
+    });
+  };
+
+  const handleRevoke = (uuid: string) => {
+    modal.confirm({
+      title: '确认吊销证书？',
+      content:
+        '吊销后该证书会被 CA 标记为无效，所有使用该证书的服务将无法正常工作。此操作不可恢复。',
+      okText: '确认吊销',
+      cancelText: '取消',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await operateOrder(uuid, 'ca_del');
+          message.success(`证书已吊销 ${randomKaomoji('success')}`);
+          load();
+        } catch {
+          /* 拦截器已 toast */
+        }
+      },
+    });
+  };
+
+  return (
+    <PageShell>
+      {/* 终端提示 */}
+      <div className={styles.greet}>
+        <TerminalPrompt
+          host="certhub"
+          path="~/certs"
+          suffix={<span className={styles.cmdText}>ls -la</span>}
+        />
+      </div>
+
+      {/* 标题 + 操作 */}
+      <SectionHeader
+        icon={<FileStack size={18} />}
+        title="证书列表"
+        subtitle={`共 ${orders.length} 个订单，当前显示 ${filtered.length} 个`}
+        extra={
+          <Link to="/apply">
+            <Button type="primary" icon={<Plus size={16} />}>
+              申请新证书
+            </Button>
+          </Link>
+        }
+      />
+
+      {/* 工具栏 */}
+      <div className={styles.toolbar}>
+        <Input
+          placeholder="搜索域名或订单号..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          prefix={<Search size={14} className={styles.searchIcon} />}
+          className={styles.search}
+          allowClear
+        />
+
+        <Segmented
+          value={filter}
+          onChange={(v) => setFilter(v as FilterType)}
+          options={FILTER_OPTIONS}
+          className={styles.filter}
+        />
+
+        <Segmented
+          value={view}
+          onChange={(v) => setView(v as View)}
+          options={[
+            { value: 'card', icon: <LayoutGrid size={14} /> },
+            { value: 'list', icon: <List size={14} /> },
+          ]}
+        />
+      </div>
+
+      {/* 内容区 */}
+      {loading ? (
+        <div className={styles.cardGrid}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton.Button
+              key={i}
+              active
+              block
+              style={{ height: 180, borderRadius: 18 }}
+            />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className={styles.emptyWrap}>
+          <EmptyState
+            mood="empty"
+            title={orders.length === 0 ? '还没有证书呢...' : '没有匹配的结果'}
+            description={
+              orders.length === 0
+                ? '申请第一张证书，开启 HTTPS 之旅'
+                : '试试调整搜索条件或筛选项'
+            }
+            size="lg"
+            action={
+              orders.length === 0 ? (
+                <Link to="/apply">
+                  <Button type="primary" size="large" icon={<Plus size={16} />}>
+                    申请证书
+                  </Button>
+                </Link>
+              ) : undefined
+            }
+          />
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
+          {view === 'card' ? (
+            <motion.div
+              key="card"
+              className={styles.cardGrid}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {filtered.map((o, i) => (
+                <OrderCard
+                  key={o.uuid}
+                  order={o}
+                  index={i}
+                  onDownloadCert={() => handleDownload(o.uuid, 'cert')}
+                  onDownloadKey={() => handleDownload(o.uuid, 'key')}
+                  onDownloadZip={() => handleDownloadZip(o.uuid, message)}
+                  onDownloadPfx={() => handleDownloadPfx(o.uuid, message)}
+                  onDelete={() => handleDelete(o.uuid)}
+                  onRemoveKey={() => handleRemoveKey(o.uuid)}
+                  onRevoke={() => handleRevoke(o.uuid)}
+                />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="list"
+              className={styles.listWrap}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {filtered.map((o, i) => (
+                <OrderRow
+                  key={o.uuid}
+                  order={o}
+                  index={i}
+                  onDownloadCert={() => handleDownload(o.uuid, 'cert')}
+                  onDownloadZip={() => handleDownloadZip(o.uuid, message)}
+                  onDownloadPfx={() => handleDownloadPfx(o.uuid, message)}
+                  onDelete={() => handleDelete(o.uuid)}
+                  onRemoveKey={() => handleRemoveKey(o.uuid)}
+                  onRevoke={() => handleRevoke(o.uuid)}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+    </PageShell>
+  );
+}
+
+/* ============================================================
+ * 卡片组件
+ * ============================================================ */
+
+interface OrderCardProps {
+  order: OrderRaw;
+  index: number;
+  onDownloadCert: () => void;
+  onDownloadKey: () => void;
+  onDownloadZip: () => void;
+  onDownloadPfx: () => void;
+  onDelete: () => void;
+  onRemoveKey: () => void;
+  onRevoke: () => void;
+}
+
+/** 证书状态尾巴文案：已签发显示剩余天数；已过期显示过期时长 */
+function renderExpiryBadge(order: OrderRaw, status: OrderStatus) {
+  if (status === 'signed') {
+    const days = remainDays(order.next);
+    const isExpiring = days <= 14;
+    return (
+      <Pill
+        variant={isExpiring ? 'warn' : 'neutral'}
+        size="xs"
+        className={isExpiring ? 'anim-wiggle' : ''}
+      >
+        剩 {days > 0 ? days : 0} 天
+      </Pill>
+    );
+  }
+  if (status === 'expired') {
+    const days = expiredDays(order.next);
+    let text = '已过期';
+    if (days >= 30) text = `已过期 ${Math.floor(days / 30)} 个月`;
+    else if (days > 0) text = `已过期 ${days} 天`;
+    return (
+      <Pill variant="warn" size="xs">
+        {text}
+      </Pill>
+    );
+  }
+  return null;
+}
+
+function OrderCard({
+  order,
+  index,
+  onDownloadCert,
+  onDownloadKey,
+  onDownloadZip,
+  onDownloadPfx,
+  onDelete,
+  onRemoveKey,
+  onRevoke,
+}: OrderCardProps) {
+  const list = safeJsonParse<Array<{ name: string; wild?: boolean }>>(order.list) || [];
+  const status = classifyFlag(order);
+  const pulseStatus = STATUS_PULSE[status];
+  const colorVariant = STATUS_COLOR[status] as any;
+  const isSigned = status === 'signed';
+  const isExpired = status === 'expired';
+  const canRevoke = (isSigned || isExpired) && !!order.keys;
+  const hasKey = !!order.keys;
+
+  return (
+    <motion.div
+      className={`${styles.card} ${styles[`card-${colorVariant}`]}`}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.3 }}
+      whileHover={{ y: -4 }}
+    >
+      <div className={styles.cardBar} />
+
+      <div className={styles.cardHead}>
+        <div className={styles.cardStatus}>
+          <StatusPulse status={pulseStatus} size={8} />
+          <Pill variant={colorVariant} size="xs" solid={isSigned}>
+            {STATUS_TEXT[status] || FLAG_MAP[order.flag] || '未知'}
+          </Pill>
+        </div>
+        <CodeInline>{shortenId(order.uuid, 10)}</CodeInline>
+      </div>
+
+      <div className={styles.cardDomains}>
+        {list.slice(0, 3).map((d, i) => (
+          <div key={i} className={styles.domainLine}>
+            <span className={styles.domainDot}>
+              {d.wild ? '✦' : '•'}
+            </span>
+            <span className={styles.domainName}>{d.name}</span>
+          </div>
+        ))}
+        {list.length > 3 && (
+          <div className={styles.domainMore}>
+            +{list.length - 3} 更多...
+          </div>
+        )}
+      </div>
+
+      <div className={styles.cardMeta}>
+        <span className={styles.metaItem}>
+          <Shield size={12} /> {SIGN_SHORT_MAP[order.sign] || order.sign}
+        </span>
+        <span className={styles.metaDot}>·</span>
+        <span className={styles.metaItem}>
+          <Key size={12} /> {TYPE_MAP[order.type] || order.type}
+        </span>
+      </div>
+
+      <div className={styles.cardFoot}>
+        <div className={styles.cardTime}>
+          <Clock size={12} />
+          <span>{fmtRelative(order.time)}</span>
+          {renderExpiryBadge(order, status)}
+        </div>
+        <div className={styles.cardActions}>
+          {(isSigned || isExpired) && (
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={onDownloadCert}
+              title="下载证书"
+            >
+              <Download size={14} />
+            </button>
+          )}
+          {isSigned && hasKey && (
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={onDownloadZip}
+              title="下载 ZIP（证书 + 密钥 + 说明）"
+            >
+              <Archive size={14} />
+            </button>
+          )}
+          {isSigned && hasKey && (
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={onDownloadPfx}
+              title="下载 PFX（随机 12 位密码）"
+            >
+              <FileLock2 size={14} />
+            </button>
+          )}
+          {(isSigned || isExpired) && hasKey && (
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={onDownloadKey}
+              title="下载私钥"
+            >
+              <KeyRound size={14} />
+            </button>
+          )}
+          {canRevoke && (
+            <button
+              type="button"
+              className={`${styles.iconBtn} ${styles.iconBtnWarn}`}
+              onClick={onRevoke}
+              title="吊销证书"
+            >
+              <ShieldOff size={14} />
+            </button>
+          )}
+          {(isSigned || isExpired) && hasKey && (
+            <button
+              type="button"
+              className={`${styles.iconBtn} ${styles.iconBtnWarn}`}
+              onClick={onRemoveKey}
+              title="清空私钥"
+            >
+              <Key size={14} />
+            </button>
+          )}
+          <button
+            type="button"
+            className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+            onClick={onDelete}
+            title="删除订单"
+          >
+            <Trash2 size={14} />
+          </button>
+          <Link to={`/order/${order.uuid}`} className={styles.viewBtn}>
+            查看 <ArrowRight size={12} />
+          </Link>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+ * 列表行组件
+ * ============================================================ */
+
+function OrderRow({
+  order,
+  index,
+  onDownloadCert,
+  onDownloadZip,
+  onDownloadPfx,
+  onDelete,
+  onRemoveKey,
+  onRevoke,
+}: {
+  order: OrderRaw;
+  index: number;
+  onDownloadCert: () => void;
+  onDownloadZip: () => void;
+  onDownloadPfx: () => void;
+  onDelete: () => void;
+  onRemoveKey: () => void;
+  onRevoke: () => void;
+}) {
+  const list = safeJsonParse<Array<{ name: string }>>(order.list) || [];
+  const status = classifyFlag(order);
+  const pulseStatus = STATUS_PULSE[status];
+  const colorVariant = STATUS_COLOR[status] as any;
+  const isSigned = status === 'signed';
+  const isExpired = status === 'expired';
+  const hasKey = !!order.keys;
+  const canRevoke = (isSigned || isExpired) && hasKey;
+
+  return (
+    <motion.div
+      className={styles.listRow}
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.03, duration: 0.3 }}
+    >
+      <div className={styles.listStatus}>
+        <StatusPulse status={pulseStatus} size={8} />
+      </div>
+      <div className={styles.listStatusPill}>
+        <Pill variant={colorVariant} size="xs" solid={isSigned}>
+          {STATUS_TEXT[status] || FLAG_MAP[order.flag]}
+        </Pill>
+      </div>
+      <CodeInline className={styles.listUuid}>{shortenId(order.uuid, 12)}</CodeInline>
+      <div className={styles.listDomain}>
+        {list.map((d) => d.name).join(', ')}
+      </div>
+      <div className={styles.listMeta}>
+        <span>{SIGN_SHORT_MAP[order.sign]}</span>
+        <span className={styles.metaDot}>·</span>
+        <span>{TYPE_MAP[order.type]}</span>
+        {renderExpiryBadge(order, status)}
+      </div>
+      <div className={styles.listTime}>{fmtDate(order.time)}</div>
+      <div className={styles.listActions}>
+        {(isSigned || isExpired) && (
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={onDownloadCert}
+            title="下载证书"
+          >
+            <Download size={14} />
+          </button>
+        )}
+        {isSigned && hasKey && (
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={onDownloadZip}
+            title="下载 ZIP"
+          >
+            <Archive size={14} />
+          </button>
+        )}
+        {isSigned && hasKey && (
+          <button
+            type="button"
+            className={styles.iconBtn}
+            onClick={onDownloadPfx}
+            title="下载 PFX"
+          >
+            <FileLock2 size={14} />
+          </button>
+        )}
+        {canRevoke && (
+          <button
+            type="button"
+            className={`${styles.iconBtn} ${styles.iconBtnWarn}`}
+            onClick={onRevoke}
+            title="吊销证书"
+          >
+            <ShieldOff size={14} />
+          </button>
+        )}
+        {(isSigned || isExpired) && hasKey && (
+          <button
+            type="button"
+            className={`${styles.iconBtn} ${styles.iconBtnWarn}`}
+            onClick={onRemoveKey}
+            title="清空私钥"
+          >
+            <Key size={14} />
+          </button>
+        )}
+        <button
+          type="button"
+          className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+          onClick={onDelete}
+          title="删除订单"
+        >
+          <Trash2 size={14} />
+        </button>
+        <Link to={`/order/${order.uuid}`} className={styles.viewBtn}>
+          <ArrowRight size={14} />
+        </Link>
+      </div>
+    </motion.div>
+  );
+}

@@ -1,0 +1,26 @@
+.text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  display: inline-block;
+  font-weight: var(--fw-bold);
+}
+
+.g-brand {
+  background-image: var(--gradient-brand);
+}
+
+.g-brand-accent {
+  background-image: var(--gradient-brand-accent);
+}
+
+.g-sunset {
+  background-image: var(--gradient-sunset);
+}
+
+.animated {
+  animation: gradientShift 8s ease-in-out infinite;
+}

@@ -5,16 +5,57 @@ import * as users from './users';
 import * as saves from './saves';
 import * as certs from './certs';
 import * as local from "hono/cookie";
+import {mountSetupRoutes} from "./routes/setup";
+import {mountAdminUsersRoutes} from "./routes/admin_users";
+import {mountAdminCertsRoutes} from "./routes/admin_certs";
+import {mountAdminConfsRoutes} from "./routes/admin_confs";
+import {mountCertDownloadRoutes} from "./routes/cert_download";
+import {mountOpenApiRoutes} from "./routes/openapi";
+import {mountAccountApiRoutes} from "./routes/account_api";
 
 // 绑定数据 ###############################################################################
+// DB_SOURCE：空/d1 → Cloudflare D1；mysql → mysql2；prisma → PrismaClient
+// 具体的附加变量（DB_MYSQL_*、DATABASE_URL）在 DB_SOURCE 对应时才会被读取。
 export type Bindings = {
-    DB_CF: D1Database, MAIL_KEYS: string, MAIL_SEND: string, AUTH_KEYS: string,
+    // 数据源 --------------------------------------------------------
+    DB_CF?: D1Database, DB_SOURCE?: string,
+    DB_MYSQL_URL?: string, DB_MYSQL_HOST?: string, DB_MYSQL_PORT?: string,
+    DB_MYSQL_USER?: string, DB_MYSQL_PASS?: string, DB_MYSQL_NAME?: string,
+    DATABASE_URL?: string,
+    // 邮件 / 站点 / 鉴权 -------------------------------------------
+    MAIL_KEYS: string, MAIL_SEND: string, AUTH_KEYS: string, SITE_KEYS?: string,
+    SITE_HOST?: string, SITE_TITLE?: string,
+    // DNS 代理 -----------------------------------------------------
     DCV_AGENT: string, DCV_EMAIL: string, DCV_TOKEN: string, DCV_ZONES: string,
+    // ACME 账号（各 CA 的 EAB） -----------------------------------
     GTS_keyMC: string, GTS_keyID: string, GTS_KeyTS: string, GTS_useIt: string,
     SSL_keyMC: string, SSL_keyID: string, SSL_KeyTS: string, SSL_useIt: string,
     ZRO_keyMC: string, ZRO_keyID: string, ZRO_KeyTS: string, ZRO_useIt: string
 }
 export const app = new Hono<{ Bindings: Bindings }>()
+
+// 初始化向导 #############################################################################
+// GET /bootstrap → 前端启动时调用，返回初始化/数据源状态
+// POST /setup    → 首次初始化（完成后写入 Confs 并将指定邮箱升级为管理员）
+mountSetupRoutes(app);
+
+// 管理员 - 用户管理 ######################################################################
+mountAdminUsersRoutes(app);
+
+// 管理员 - 证书管理 ######################################################################
+mountAdminCertsRoutes(app);
+
+// 管理员 - 系统配置 ######################################################################
+mountAdminConfsRoutes(app);
+
+// 证书下载增强（ZIP / PFX） ##############################################################
+mountCertDownloadRoutes(app);
+
+// 开放 API（/api/v1/*） ###################################################################
+mountOpenApiRoutes(app);
+
+// 用户自助 API token #####################################################################
+mountAccountApiRoutes(app);
 
 // 获取信息 ###############################################################################
 app.get('/users/', async (c: Context): Promise<Response> => {
@@ -28,8 +69,8 @@ app.get('/nonce/', async (c: Context): Promise<Response> => {
 
 // 核查状态 ###############################################################################
 app.get('/panel/', async (c: Context): Promise<Response> => {
-    if (!await users.userAuth(c)) c.redirect("/login.html", 302);
-    return c.redirect("/panel.html", 302);
+    if (!await users.userAuth(c)) return c.redirect("/#/login", 302);
+    return c.redirect("/#/panel", 302);
 })
 
 // 申请证书 ###############################################################################
@@ -47,6 +88,28 @@ app.use('/apply/', async (c: Context): Promise<Response> => {
             domain_list[domain]["text"] = "";
             domain_save.push(domain_list[domain]);
         }
+
+        // 三重校验：captcha / 月度上限 / 配额 ------------------------------------
+        const user_mail = local.getCookie(c, 'mail') ?? "";
+        const {ensureDao} = await import("./db");
+        const dao = await ensureDao(c.env as any);
+        const userRow = await dao.getUser(user_mail);
+        if (!userRow) return c.json({flags: 4, texts: "用户不存在"}, 401);
+        const {checkApplyGuard} = await import("./middleware/applyGuard");
+        const guard = await checkApplyGuard(c, {
+            source: "web",
+            user: userRow,
+            captchaToken:
+                upload_json['captcha_token'] ??
+                upload_json['captchaToken'] ??
+                null,
+        });
+        if (!guard.ok) {
+            return c.json({
+                flags: 10, code: guard.code, texts: guard.message,
+            }, guard.status as any);
+        }
+
         // console.log(domain_save);
         let uuid = await users.newNonce(16)
         await saves.insertDB(c.env.DB_CF, "Apply", {
@@ -64,11 +127,45 @@ app.use('/apply/', async (c: Context): Promise<Response> => {
             next: new Date(new Date().setDate(new Date().getDate() + 7)).getTime(),
             text: "订单提交成功",
         })
+        // 创建订单后立即推进一次状态机（生成 ACME 订单 + 写入 TXT 挑战记录）
+        try {
+            await certs.processOne(c.env, uuid);
+        } catch (e) {
+            console.error("apply processOne error:", e);
+        }
         return c.json({"flags": 0, "texts": "证书申请成功", "order": uuid}, 200);
     } catch (error) {
         return c.json({"flags": 3, "texts": "请求数据无效: " + error}, 400);
     }
 })
+
+// 查询申请配额（供前端申请页展示） #########################################################
+app.get('/apply/quota', async (c: Context): Promise<Response> => {
+    if (!await users.userAuth(c)) return c.json({flags: 2, texts: "用户尚未登录"}, 401);
+    const mail = local.getCookie(c, 'mail') ?? "";
+    try {
+        const {ensureDao} = await import("./db");
+        const {readInt} = await import("./db/conf");
+        const dao = await ensureDao(c.env as any);
+        const user = await dao.getUser(mail);
+        if (!user) return c.json({flags: 4, texts: "用户不存在"}, 401);
+        const limit = await readInt(c.env as any, "MONTHLY_APPLY_LIMIT", 0);
+        const now = new Date();
+        const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+        const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
+        const used = await dao.countAppliesByMailInRange(mail, start, end);
+        const active = await dao.countActiveAppliesByMail(mail);
+        return c.json({
+            flags: 0,
+            monthly_limit: limit,
+            month_used: used,
+            quota: Number(user.quota ?? -1),
+            active_certs: active,
+        });
+    } catch (e: any) {
+        return c.json({flags: 5, texts: e?.message ?? String(e)}, 500);
+    }
+});
 
 // 获取订单 ###############################################################################
 app.use('/order/', async (c: Context): Promise<Response> => {
@@ -107,6 +204,21 @@ app.use('/order/', async (c: Context): Promise<Response> => {
                 let order_user: any = (await saves.selectDB( // 查询申请者信息
                     c.env.DB_CF, "Users", {mail: {value: order_mail}}))[0];
                 await opDomain(c.env, order_user, order_info, ["all"]);
+            } else if (order_acts === "process") { // 立即按当前 flag 一键推进到底
+                let order_info = order_data[0]; // 获取当前订单详细情况
+                let cur_flag = Number(order_info['flag']);
+                if (cur_flag === 5 || cur_flag < 0)
+                    return c.json({"flags": 0, "texts": "当前订单无需处理", "order": order_acts});
+                if (cur_flag === 2) { // 等待 DNS 配置阶段：立即触发一次验证，再推进到底
+                    await saves.updateDB(c.env.DB_CF, "Apply", {flag: 3}, {uuid: order_uuid});
+                    let order_mail = order_info['mail'];
+                    let order_user: any = (await saves.selectDB(
+                        c.env.DB_CF, "Users", {mail: {value: order_mail}}))[0];
+                    let fresh_info: any = (await saves.selectDB(
+                        c.env.DB_CF, "Apply", {uuid: {value: order_uuid}}))[0];
+                    await opDomain(c.env, order_user, fresh_info, ["all"]);
+                }
+                await certs.processOne(c.env, order_uuid);
             } else if (order_acts === "reload")
                 await saves.updateDB(c.env.DB_CF, "Apply", {flag: 0}, {uuid: order_uuid})
             else if (order_acts === "modify" || order_acts === "cancel")
@@ -153,7 +265,18 @@ app.get('/login/', async (c: Context): Promise<Response> => {
 app.use('/check/', async (c: Context): Promise<Response> => {
     if (!await users.userAuth(c)) return c.json({"flags": 2, "texts": "用户尚未登录"}, 401);
     let user_email: string | undefined = local.getCookie(c, 'mail');
-    return c.json({"flags": 0, "texts": user_email}, 200);
+    // 附带 is_admin / quota 字段便于前端控制菜单与操作
+    let is_admin = 0;
+    let quota = -1;
+    try {
+        const dao = await (await import("./db")).ensureDao(c.env as any);
+        const u = await dao.getUser(user_email ?? "");
+        if (u) {
+            is_admin = Number(u.is_admin ?? 0);
+            quota = Number(u.quota ?? -1);
+        }
+    } catch {/* ignore, 保持默认 */}
+    return c.json({"flags": 0, "texts": user_email, "is_admin": is_admin, "quota": quota}, 200);
 })
 
 // 退出登录 ###############################################################################

@@ -41,6 +41,17 @@ app.route('/', index.app)
 // 静态文件服务
 app.use('*', serveStatic({root: 'public/'}))
 
+// SPA fallback：任何未匹配的 GET 请求都回退到 index.html
+// 这确保用户直接访问 /panel 或刷新时也能正确加载前端
+import { readFileSync, existsSync } from 'node:fs'
+app.get('*', (c) => {
+    const indexPath = 'public/index.html'
+    if (existsSync(indexPath)) {
+        return c.html(readFileSync(indexPath, 'utf-8'))
+    }
+    return c.text('index.html not found, please run `npm --prefix frontend run build`', 404)
+})
+
 serve({
     fetch: app.fetch,
     port: 3000,

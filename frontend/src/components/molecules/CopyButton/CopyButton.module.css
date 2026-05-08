@@ -1,0 +1,33 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: var(--fw-medium);
+  color: var(--text-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.btn:hover {
+  color: var(--brand);
+  background: var(--brand-softer);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.copied {
+  color: var(--ok) !important;
+  background: var(--ok-soft) !important;
+}
+
+.label {
+  line-height: 1;
+}

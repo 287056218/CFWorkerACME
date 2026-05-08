@@ -7,6 +7,7 @@ import * as query from "./query";
 import {Bindings} from './index'
 import {hmacSHA2} from "./users";
 import {errors} from "wrangler";
+import {readConf} from "./db/conf";
 
 
 const acme_url_map: Record<string, any> = {
@@ -33,6 +34,64 @@ export async function Processing(env: Bindings) {
         if (order_info['flag'] == 3) result.push(await dnsAuthy(env, order_user, order_info));// 自动执行域名验证
         if (order_info['flag'] == 4) result.push(await getCerts(env, order_user, order_info));// 自动执行获取证书
     } // ========================================================================================================
+    return result;
+}
+
+// 单订单一键推进 ==================================================================================
+// 按当前 flag 循环推进状态机，直到进入需要外部介入的节点：
+// - flag=2  需要用户配置 DNS（等用户触发验证）
+// - flag=5  证书签发完成
+// - flag=-1 失败
+// - 或中间某步 flag 未发生变化（避免死循环）
+export async function processOne(env: Bindings, order_uuid: string) {
+    let result: any[] = [];
+    // 自愈检查：订单已创建（data 存在）但 list 中某些域名 auth 缺失，则强制回到 flag=1 重跑 setApply
+    {
+        let cur: any = (await saves.selectDB(
+            env.DB_CF, "Apply", {uuid: {value: order_uuid}}))[0];
+        if (cur && cur['data'] && cur['list']) {
+            let cur_flag = Number(cur['flag']);
+            if (cur_flag >= 1 && cur_flag < 4) { // 只对尚未开始验证的中间态做自愈
+                try {
+                    let list_items: any[] = JSON.parse(cur['list']) || [];
+                    let need_repair = list_items.length > 0 && list_items.some((it: any) => {
+                        let auth_val = (it && (it['auth'] || it['text'])) || "";
+                        return !auth_val;
+                    });
+                    if (need_repair && cur_flag !== 1) {
+                        await saves.updateDB(env.DB_CF, "Apply", {flag: 1}, {uuid: order_uuid});
+                        console.log("processOne self-heal: reset flag=1 for order " + order_uuid);
+                    }
+                } catch (e) {
+                    console.error("processOne self-heal parse error:", e);
+                }
+            }
+        }
+    }
+    for (let i = 0; i < 8; i++) { // 最多推进 8 步，防止极端情况死循环
+        let order_info: any = (await saves.selectDB(
+            env.DB_CF, "Apply", {uuid: {value: order_uuid}}))[0];
+        if (!order_info) break;
+        let flag = Number(order_info['flag']);
+        if (flag === 2 || flag === 5 || flag < 0) break; // 终止条件
+        let order_user: any = (await saves.selectDB(
+            env.DB_CF, "Users", {mail: {value: order_info['mail']}}))[0];
+        try {
+            if (flag === 0) result.push(await newApply(env, order_user, order_info));
+            else if (flag === 1) result.push(await setApply(env, order_user, order_info));
+            else if (flag === 3) result.push(await dnsAuthy(env, order_user, order_info));
+            else if (flag === 4) result.push(await getCerts(env, order_user, order_info));
+            else break; // 其它未知状态，停止推进
+        } catch (e) {
+            console.error("processOne error at flag=" + flag + ":", e);
+            result.push({"texts": "处理失败: " + (e as any)?.message});
+            break;
+        }
+        // 若本轮处理后 flag 未推进，防止死循环
+        let next_info: any = (await saves.selectDB(
+            env.DB_CF, "Apply", {uuid: {value: order_uuid}}))[0];
+        if (!next_info || Number(next_info['flag']) === flag) break;
+    }
     return result;
 }
 
@@ -82,13 +141,22 @@ export async function setApply(env: Bindings, order_user: any, order_info: any) 
         let domain_name = domain_item.name;
         // if (domain_item.wild) domain_name = "*." + domain_name
         // console.log(domain_name, author_save, author_save[domain_name]);
-        if (author_save[domain_name] == undefined) continue;
+        if (author_save[domain_name] == undefined) {
+            // 未拿到挑战：保留原条目但标记未就绪，触发下次自愈重试覆盖写入
+            domain_item['auth'] = domain_item['auth'] || "";
+            domain_item.flag = 1;
+            domain_flag = 1;
+            domain_text += domain_item.name + ": 未获取到验证挑战，稍后重试；";
+            domain_save.push(domain_item);
+            continue;
+        }
         // console.log(author_save);
         domain_item['auth'] = author_save[domain_name]['text'];
         domain_item.flag = 2
         if (domain_item['type'] == "dns-auto") {
             let domain_auto = await hmacSHA2(domain_name.replaceAll("*.", ""), order_user['mail'])
-            domain_item['auto'] = domain_auto.substring(0, 16) + "." + env.DCV_AGENT
+            const dcvAgent = (await readConf(env as any, "DCV_AGENT")) ?? ""
+            domain_item['auto'] = domain_auto.substring(0, 16) + "." + dcvAgent
             // console.log(domain_item['auto'])
             try { // 设置域名内容 ====================================================
                 let data: Record<string, any> = await agent.dnsAdd(
@@ -277,19 +345,33 @@ async function getNames(order_info: any, full: boolean = false) {
 // 获取操作接口 ####################################################################################
 async function getStart(env: Bindings, order_user: any, order_info: any) {
     let acme_url = acme_url_map[order_info['sign']];
+    // 从 Confs 优先读取三家 CA 的账户凭据（回退到 env / 默认值）
+    const [GTS_KeyTS, GTS_keyID, GTS_keyMC,
+        SSL_KeyTS, SSL_keyID, SSL_keyMC,
+        ZRO_KeyTS, ZRO_keyID, ZRO_keyMC] = await Promise.all([
+        readConf(env as any, "GTS_KeyTS"),
+        readConf(env as any, "GTS_keyID"),
+        readConf(env as any, "GTS_keyMC"),
+        readConf(env as any, "SSL_KeyTS"),
+        readConf(env as any, "SSL_keyID"),
+        readConf(env as any, "SSL_keyMC"),
+        readConf(env as any, "ZRO_KeyTS"),
+        readConf(env as any, "ZRO_keyID"),
+        readConf(env as any, "ZRO_keyMC"),
+    ]);
     const acme_key_map: Record<string, any> = {
         "lets-encrypt": order_user['keys'],
-        "google-trust": env.GTS_KeyTS,
+        "google-trust": GTS_KeyTS,
         "bypass-trust": order_user['keys'],
-        "zeroca-trust": env.ZRO_KeyTS,
-        "sslcom-trust": env.SSL_KeyTS,
+        "zeroca-trust": ZRO_KeyTS,
+        "sslcom-trust": SSL_KeyTS,
     }
     const acme_eab_map: Record<string, any> = {
         "lets-encrypt": undefined,
-        "google-trust": {kid: env.GTS_keyID, hmacKey: env.GTS_keyMC,},
+        "google-trust": {kid: GTS_keyID, hmacKey: GTS_keyMC,},
         "bypass-trust": undefined,
-        "zeroca-trust": {kid: env.ZRO_keyID, hmacKey: env.ZRO_keyMC,},
-        "sslcom-trust": {kid: env.SSL_keyID, hmacKey: env.SSL_keyMC,}
+        "zeroca-trust": {kid: ZRO_keyID, hmacKey: ZRO_keyMC,},
+        "sslcom-trust": {kid: SSL_keyID, hmacKey: SSL_keyMC,}
     }
     if (order_info['sign'] == "sslcom-trust") acme_url += order_info['type'].substring(0, 3);
     let client_data: Client = new acme.Client({

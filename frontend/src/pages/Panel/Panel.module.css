@@ -1,0 +1,376 @@
+/* ============================================================
+ * Panel 管理面板样式
+ * ============================================================ */
+
+.greet {
+  padding: 8px 0 24px;
+}
+
+.greetSuffix {
+  font-family: var(--font-chinese);
+  font-size: 13px;
+  color: var(--text-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- 主网格 ---------- */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* ---------- 证书总览 ---------- */
+.overview {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: 24px;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+/* ---------- 快速操作 ---------- */
+.quickActions {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quickBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  text-decoration: none;
+  color: var(--text-1);
+  text-align: left;
+  font-family: var(--font-body);
+  width: 100%;
+}
+
+.quickBtn:hover {
+  border-color: var(--brand);
+  background: var(--brand-softer);
+  transform: translateX(3px);
+}
+
+.quickBtn > svg {
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.quickBtnPrimary {
+  background: var(--gradient-brand);
+  border-color: transparent;
+  color: var(--text-on-brand);
+  box-shadow: 0 4px 14px var(--brand-glow);
+}
+
+.quickBtnPrimary:hover {
+  transform: translateY(-2px);
+  background: var(--gradient-brand);
+  filter: brightness(1.05);
+  color: var(--text-on-brand);
+}
+
+.quickBtnPrimary > svg {
+  color: var(--text-on-brand);
+}
+
+.quickBtnText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quickBtnTitle {
+  font-size: 13px;
+  font-weight: var(--fw-semibold);
+}
+
+.quickBtnDesc {
+  font-size: 11px;
+  font-family: var(--font-chinese);
+  opacity: 0.75;
+}
+
+/* ---------- 消息通知 ---------- */
+.messages {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+  color: var(--text-3);
+}
+
+/* ---------- 时间线 ---------- */
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.timelineItem {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 12px;
+  padding: 10px 0;
+  align-items: center;
+}
+
+.timelineLine {
+  position: absolute;
+  left: 9px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--line-soft);
+}
+
+.timelineItem:first-child .timelineLine {
+  top: 20px;
+}
+
+.timelineItem:last-child .timelineLine {
+  bottom: 20px;
+}
+
+.timelineDot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-panel);
+  border-radius: 50%;
+}
+
+.timelineContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.timelineMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timelineTime {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.timelineBody {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timelineDomains {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text-1);
+  font-weight: var(--fw-medium);
+}
+
+.timelineText {
+  font-family: var(--font-chinese);
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.timelineAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-3);
+  text-decoration: none;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.timelineAction:hover {
+  background: var(--brand-softer);
+  color: var(--brand);
+}
+
+/* ---------- 底部两栏 ---------- */
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.collapseCard {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+
+.collapseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 20px 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.collapseHeader:hover {
+  background: var(--brand-softer);
+}
+
+.collapseHeader > :first-child {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+.collapseArrow {
+  color: var(--text-3);
+  display: inline-flex;
+  align-items: center;
+}
+
+.collapseBody {
+  overflow: hidden;
+  border-top: 1px dashed var(--line-dashed);
+}
+
+.collapseInner {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.textarea {
+  font-family: var(--font-display) !important;
+  font-size: 12px !important;
+  background: var(--bg-code) !important;
+}
+
+.collapseActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.fieldRow :global(.ant-input) {
+  flex: 1;
+}
+
+.accountActions {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line-dashed);
+  margin-top: 4px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .overview,
+  .quickActions,
+  .messages {
+    padding: 16px;
+  }
+
+  .collapseHeader {
+    padding: 14px 16px;
+  }
+
+  .collapseInner {
+    padding: 14px 16px;
+  }
+
+  .fieldRow {
+    flex-direction: column;
+  }
+
+  .accountActions {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,40 @@
+/**
+ * 管理员 - 系统管理 API
+ */
+import { apiGet, apiPost, http } from './request';
+
+export interface AdminConfsResp {
+  flags: number;
+  texts?: string;
+  /**
+   * 所有配置的快照：
+   *   - 普通项返回 string
+   *   - 敏感项返回 { configured: boolean }
+   */
+  items: Record<string, any>;
+  secret_keys: string[];
+}
+
+export async function fetchAdminConfs(): Promise<AdminConfsResp> {
+  return await apiGet<AdminConfsResp>('/admin/confs');
+}
+
+export async function saveAdminConf(name: string, data: any) {
+  const res = await http.put(`/admin/confs/${encodeURIComponent(name)}`, {
+    data,
+  });
+  return res.data;
+}
+
+export async function deleteAdminConf(name: string) {
+  const res = await http.delete(`/admin/confs/${encodeURIComponent(name)}`);
+  return res.data;
+}
+
+export async function testMail(to: string) {
+  return await apiPost('/admin/confs/mail/test', { to });
+}
+
+export async function testCaptcha(token: string) {
+  return await apiPost('/admin/confs/captcha/test', { token });
+}

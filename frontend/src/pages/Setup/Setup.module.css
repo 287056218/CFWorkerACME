@@ -1,0 +1,109 @@
+/* ============================================================
+ * Setup 向导页样式
+ * ============================================================ */
+
+.setupPage {
+  min-height: 100vh;
+  padding: 48px 16px;
+  background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(var(--rgb-primary), 0.12),
+      transparent 70%
+    ),
+    radial-gradient(
+      900px 500px at 90% 90%,
+      rgba(var(--rgb-accent), 0.1),
+      transparent 70%
+    ),
+    var(--c-bg-base);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.card {
+  width: 100%;
+  max-width: 680px;
+  padding: 32px;
+  border-radius: 16px;
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  box-shadow: 0 18px 48px -16px rgba(0, 0, 0, 0.18);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--c-text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--c-text-soft);
+  line-height: 1.6;
+}
+
+.probe {
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.probe.ok {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.probe.err {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.probeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+.probeLabel {
+  min-width: 80px;
+  color: var(--c-text-soft);
+}
+
+.errorText {
+  font-size: 12px;
+  color: #ef4444;
+  font-family: var(--font-mono, monospace);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--c-text-soft);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}

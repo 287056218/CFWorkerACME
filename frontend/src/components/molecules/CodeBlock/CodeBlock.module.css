@@ -1,0 +1,68 @@
+.wrap {
+  position: relative;
+  background: var(--bg-code);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-code);
+  overflow: hidden;
+  font-family: var(--font-display);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: transparent;
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--font-display);
+  font-size: 11px;
+}
+
+.lang {
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: var(--fw-semibold);
+}
+
+.copyBtn {
+  margin-left: auto;
+}
+
+.pre {
+  margin: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  background: transparent;
+}
+
+.code {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-feature-settings: 'ss01', 'cv11';
+  line-height: 1.6;
+  color: var(--text-1);
+  white-space: pre;
+  word-wrap: normal;
+}
+
+.line {
+  display: flex;
+  gap: 12px;
+  min-height: 1.6em;
+}
+
+.lineNumber {
+  display: inline-block;
+  width: 2em;
+  text-align: right;
+  color: var(--text-3);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.lineContent {
+  flex: 1;
+  white-space: pre;
+}

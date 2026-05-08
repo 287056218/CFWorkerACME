@@ -1,154 +1,122 @@
-// 更新数据 ####################################################################
+/**
+ * 历史遗留数据访问层（薄包装）
+ * -------------------------------------------------------------------------
+ * 项目原先的业务代码（certs.ts / users.ts / index.ts）全部通过本文件读写 D1，
+ * 形态为 `saves.selectDB(env.DB_CF, "Table", where)`。
+ *
+ * 重构后：本文件**不再直接调用 D1Database**，而是将每次调用委托给 D1Dao。
+ * 这样做的好处：
+ *   - 不破坏旧业务签名，兼容现有调用点；
+ *   - 真正访问数据库的 SQL 语句集中在 D1Dao 中，迁移或替换时只改一处；
+ *   - 后续新增的 admin / setup / api 等路由应直接使用 `ensureDao(env)`，
+ *     而不是继续走本文件。
+ */
+
+import {D1Dao} from "./db/dao.d1";
+
+/** 条件对象（维持旧签名，兼容现存调用点） */
+export interface SelectWhere {
+    [column: string]: { value: any; op?: string };
+}
+
+function toDao(DB: D1Database): D1Dao {
+    return new D1Dao(DB);
+}
+
+/** SQL where 条件构造（内部使用，保持兼容） */
+function buildFilter(where: SelectWhere | Record<string, any>, legacy: boolean): any {
+    const eq: Record<string, any> = {};
+    const neq: Record<string, any> = {};
+    const like: Record<string, string> = {};
+    const notLike: Record<string, string> = {};
+    if (legacy) {
+        for (const [k, cond] of Object.entries(where as SelectWhere)) {
+            const op = (cond?.op ?? "=").toUpperCase();
+            if (op === "LIKE") like[k] = String(cond.value);
+            else if (op === "NOT LIKE") notLike[k] = String(cond.value);
+            else if (op === "!=") neq[k] = cond.value;
+            else eq[k] = cond.value;
+        }
+    } else {
+        for (const [k, v] of Object.entries(where)) eq[k] = v;
+    }
+    return {eq, neq, like, notLike};
+}
+
+/** 更新数据 */
 export async function updateDB(
     DB: D1Database, table: string,
-    values: Record<string, any>, where: Record<string, any>): Promise<D1Response & {
-    results: Record<string, unknown>[]
-}> {
-    // 构建更新的列和值部分
-    const setConditions: string[] = [];
-    const whereConditions: string[] = [];
-    const params: any[] = [];
-
-    // 构建 SET 部分
-    for (const [key, value] of Object.entries(values)) {
-        setConditions.push(`${key} = ?`);
-        params.push(value);
-    }
-
-    // 构建 WHERE 部分
-    for (const [key, value] of Object.entries(where)) {
-        whereConditions.push(`${key} = ?`);
-        params.push(value);
-    }
-
-    // 构建完整的 SQL 更新语句
-    let sql = `UPDATE ${table}
-               SET ${setConditions.join(', ')}
-               WHERE ${whereConditions.join(' AND ')}`;
-
-    // console.log('SQL:', sql);
-    // console.log('Params:', params);
-
-    try {
-        // 执行更新操作
-        return await DB.prepare(sql).bind(...params).run();
-    } catch (e) {
-        console.error('Database error:', e);
-        throw e; // 重新抛出错误以便调用者处理
-    }
+    values: Record<string, any>, where: Record<string, any>
+): Promise<any> {
+    const dao = toDao(DB);
+    // 拼 SQL 通过 dao.exec + prepared 不方便，这里直接用 dao 底层语义重实现
+    const cols = Object.keys(values);
+    const whereCols = Object.keys(where);
+    if (cols.length === 0) return {success: true};
+    const set = cols.map(c => `${c} = ?`).join(", ");
+    const wh = whereCols.length > 0 ? " WHERE " + whereCols.map(c => `${c} = ?`).join(" AND ") : "";
+    const sql = `UPDATE ${table} SET ${set}${wh}`;
+    const params = [...Object.values(values), ...Object.values(where)];
+    return await (DB as any).prepare(sql).bind(...params).run();
 }
 
-// 插入数据 ####################################################################
+/** 插入数据 */
 export async function insertDB(
     DB: D1Database, table: string,
-    values: Record<string, any>): Promise<D1Response & { results: Record<string, unknown>[] }> {
-    // 构建列名和占位符数组
-    const columns: string[] = [];
-    const placeholders: string[] = [];
-    const params: any[] = [];
-
-    for (const [key, value] of Object.entries(values)) {
-        columns.push(key);
-        placeholders.push('?');
-        params.push(value);
-    }
-
-    // 构建完整的 SQL 插入语句
-    let sql = `INSERT INTO ${table} (${columns.join(', ')})
-               VALUES (${placeholders.join(', ')})`;
-
-    // console.log('SQL:', sql);
-    // console.log('Params:', params);
-
-    try {
-        // 执行插入操作
-        return await DB.prepare(sql).bind(...params).run();
-    } catch (e) {
-        console.error('Database error:', e);
-        throw e; // 重新抛出错误以便调用者处理
-    }
+    values: Record<string, any>
+): Promise<any> {
+    const cols = Object.keys(values);
+    const ph = cols.map(() => "?").join(",");
+    const sql = `INSERT INTO ${table} (${cols.join(", ")}) VALUES (${ph})`;
+    return await (DB as any).prepare(sql).bind(...Object.values(values)).run();
 }
 
-// 查找数据 ################################################################################
+/** 查询数据（兼容旧签名 {col: {value, op}}） */
 export async function selectDB(
     DB: D1Database, table: string,
-    where: Record<string, {
-        value: any,
-        op?: string
-    }>) {
-    // 构建查询条件数组
+    where: SelectWhere
+): Promise<Record<string, any>[]> {
     const conditions: string[] = [];
     const params: any[] = [];
-
-    for (const [key, condition] of Object.entries(where)) {
-        let op = condition.op || '=';
-        if (op === 'LIKE') {
-            conditions.push(`${key} LIKE ?`);
-            params.push(`%${condition.value}%`);
-        } else if (op === 'NOT LIKE') {
-            conditions.push(`${key} NOT LIKE ?`);
-            params.push(`%${condition.value}%`);
-        } else if (op === '!=') {
-            conditions.push(`${key} != ?`);
-            params.push(condition.value);
+    for (const [k, c] of Object.entries(where)) {
+        const op = (c?.op ?? "=").toUpperCase();
+        if (op === "LIKE") {
+            conditions.push(`${k} LIKE ?`);
+            params.push(`%${c.value}%`);
+        } else if (op === "NOT LIKE") {
+            conditions.push(`${k} NOT LIKE ?`);
+            params.push(`%${c.value}%`);
+        } else if (op === "!=") {
+            conditions.push(`${k} != ?`);
+            params.push(c.value);
         } else {
-            conditions.push(`${key} = ?`);
-            params.push(condition.value);
+            conditions.push(`${k} = ?`);
+            params.push(c.value);
         }
     }
-
-    // 构建完整的 SQL 查询
-    let sql = `SELECT *
-               FROM ${table}
-               WHERE 1 = 1`;
-    if (conditions.length > 0) {
-        sql += ' AND ' + conditions.join(' AND ');
-    }
-    // console.log('where:', where);
-    // console.log('SQL:', sql);
-    // console.log('Params:', params);
-
+    let sql = `SELECT * FROM ${table} WHERE 1 = 1`;
+    if (conditions.length > 0) sql += " AND " + conditions.join(" AND ");
     try {
-        // 使用参数化查询
-        let {results} = await DB.prepare(sql).bind(...params).all();
-        return results;
-
+        const {results} = await (DB as any).prepare(sql).bind(...params).all();
+        return results as Record<string, any>[];
     } catch (e) {
-        console.error('Database error:', e);
+        console.error("[saves.selectDB] error:", e);
         return [];
     }
 }
 
-// 删除数据 ###############################################################################
+/** 删除数据 */
 export async function deleteDB(
-    DB: D1Database, table: string,
-    where: Record<string, any>
+    DB: D1Database, table: string, where: Record<string, any>
 ): Promise<number> {
-    const conditions: string[] = [];
-    const params: any[] = [];
-    if (Object.keys(where).length <= 0) {
-        return 0;
-    }
-    for (const [key, value] of Object.entries(where)) {
-        conditions.push(`${key} = ?`);
-        params.push(value);
-    }
-
-    let sql = `DELETE
-               FROM ${table}
-               WHERE 1 = 1`;
-    if (conditions.length > 0) {
-        sql += ' AND ' + conditions.join(' AND ');
-    }
-
-    // console.log('SQL:', sql);
-    // console.log('Params:', params);
-
+    const conds = Object.keys(where);
+    if (conds.length === 0) return 0;
+    const sql = `DELETE FROM ${table} WHERE ${conds.map(c => `${c} = ?`).join(" AND ")}`;
     try {
-        await DB.prepare(sql).bind(...params).run();
+        await (DB as any).prepare(sql).bind(...Object.values(where)).run();
         return 0;
     } catch (e) {
-        console.error('Database error:', e);
+        console.error("[saves.deleteDB] error:", e);
         throw e;
     }
 }

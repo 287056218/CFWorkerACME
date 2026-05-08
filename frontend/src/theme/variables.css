@@ -1,0 +1,293 @@
+/* ============================================================
+ * CertHub · 设计变量系统
+ * 风格：Cyber-Kawaii Terminal
+ * 白天：晨雾薄荷  暗黑：深夜终端
+ * ============================================================ */
+
+:root {
+  /* ---------- 字体 ---------- */
+  --font-display: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Cascadia Code',
+    'Source Code Pro', ui-monospace, Menlo, Consolas, monospace;
+  --font-body: 'Plus Jakarta Sans', 'Nunito', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-chinese: 'LXGW WenKai', 'HarmonyOS Sans SC', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-accent: 'Caveat', 'Kalam', cursive;
+
+  /* ---------- 字号 ---------- */
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14px;
+  --fs-md: 15px;
+  --fs-lg: 16px;
+  --fs-xl: 18px;
+  --fs-2xl: 22px;
+  --fs-3xl: 28px;
+  --fs-4xl: 36px;
+  --fs-5xl: 48px;
+  --fs-6xl: 64px;
+
+  /* ---------- 行高 ---------- */
+  --lh-tight: 1.2;
+  --lh-snug: 1.4;
+  --lh-normal: 1.6;
+  --lh-relaxed: 1.8;
+
+  /* ---------- 字重 ---------- */
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+
+  /* ---------- 圆角阶梯 ---------- */
+  --radius-pill: 999px;
+  --radius-card: 18px;
+  --radius-panel: 24px;
+  --radius-xl: 20px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --radius-xs: 8px;
+  --radius-input: 12px;
+  --radius-code: 8px;
+
+  /* ---------- 间距 ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ---------- 层级 ---------- */
+  --z-bg: 0;
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-drawer: 500;
+  --z-modal: 1000;
+  --z-toast: 2000;
+
+  /* ---------- 过渡 ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 0.15s;
+  --duration-base: 0.25s;
+  --duration-slow: 0.4s;
+
+  /* ---------- 断点（给 JS 读取） ---------- */
+  --bp-xs: 480px;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1600px;
+  --bp-2xl: 1536px;
+}
+
+/* ============================================================
+ * 🌞 白天模式 —— 晨雾薄荷（Morning Mint）
+ * ============================================================ */
+:root[data-theme='light'] {
+  /* 背景 */
+  --bg-base: #f8f5ef;
+  --bg-canvas: #fdfbf6;
+  --bg-panel: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-code: #eeeae0;
+  --bg-glass: rgba(255, 255, 255, 0.72);
+  --bg-overlay: rgba(28, 25, 23, 0.4);
+
+  /* 品牌色 —— 薄荷绿 */
+  --brand: #2ec4a6;
+  --brand-soft: #a8e8d9;
+  --brand-softer: #d6f4ec;
+  --brand-ink: #0f766e;
+  --brand-glow: rgba(46, 196, 166, 0.25);
+
+  /* 点缀色 —— 珊瑚橙 */
+  --accent: #ff7a59;
+  --accent-soft: #ffd1c2;
+  --accent-softer: #ffe8df;
+  --accent-ink: #c04a2c;
+
+  /* 辅助装饰色 */
+  --sakura: #ff9eb5;
+  --sakura-soft: #ffd6df;
+  --lemon: #ffd166;
+  --lemon-soft: #ffeec2;
+  --lavender: #b892ff;
+  --lavender-soft: #e3d4ff;
+
+  /* 文字 */
+  --text-1: #1c1917;
+  --text-2: #57534e;
+  --text-3: #a8a29e;
+  --text-4: #d6d3d1;
+  --text-on-brand: #ffffff;
+  --text-on-accent: #ffffff;
+  --text-link: var(--brand-ink);
+
+  /* 边框与分割线 */
+  --line: #e7e2d6;
+  --line-soft: #efeadc;
+  --line-strong: #d6cfbe;
+  --line-dashed: rgba(168, 162, 158, 0.45);
+
+  /* 状态色 */
+  --ok: #10b981;
+  --ok-soft: #d1fae5;
+  --warn: #f59e0b;
+  --warn-soft: #fef3c7;
+  --err: #ef4444;
+  --err-soft: #fee2e2;
+  --info: #3b82f6;
+  --info-soft: #dbeafe;
+
+  /* 阴影（带暖色调） */
+  --shadow-xs: 0 1px 2px rgba(120, 90, 60, 0.06);
+  --shadow-sm: 0 2px 8px rgba(120, 90, 60, 0.08);
+  --shadow-md: 0 8px 24px rgba(120, 90, 60, 0.1);
+  --shadow-lg: 0 20px 48px rgba(120, 90, 60, 0.14);
+  --shadow-xl: 0 32px 64px rgba(120, 90, 60, 0.18);
+  --shadow-glow: 0 0 0 4px rgba(46, 196, 166, 0.18);
+  --shadow-glow-accent: 0 0 0 4px rgba(255, 122, 89, 0.2);
+  --shadow-inset: inset 0 1px 2px rgba(120, 90, 60, 0.06);
+
+  /* 渐变 */
+  --gradient-brand: linear-gradient(135deg, #2ec4a6 0%, #5eead4 100%);
+  --gradient-brand-accent: linear-gradient(135deg, #2ec4a6 0%, #ff7a59 100%);
+  --gradient-sunset: linear-gradient(135deg, #ffd166 0%, #ff7a59 50%, #ff9eb5 100%);
+  --gradient-bg: radial-gradient(
+    ellipse at top left,
+    rgba(168, 232, 217, 0.4) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    ellipse at bottom right,
+    rgba(255, 209, 194, 0.4) 0%,
+    transparent 50%
+  );
+
+  /* 终端语义色（用于 TerminalPrompt） */
+  --term-user: #2ec4a6;
+  --term-at: #a8a29e;
+  --term-host: #ff7a59;
+  --term-colon: #a8a29e;
+  --term-path: #b892ff;
+  --term-dollar: #57534e;
+}
+
+/* ============================================================
+ * 🌙 暗黑模式 —— 深夜终端（Midnight Terminal）
+ * ============================================================ */
+:root[data-theme='dark'] {
+  /* 背景 */
+  --bg-base: #0b1110;
+  --bg-canvas: #0e1514;
+  --bg-panel: #141b1a;
+  --bg-elevated: #1a2221;
+  --bg-code: #0a0f0e;
+  --bg-glass: rgba(20, 27, 26, 0.72);
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+
+  /* 品牌色 —— 荧光薄荷 */
+  --brand: #5eead4;
+  --brand-soft: rgba(94, 234, 212, 0.18);
+  --brand-softer: rgba(94, 234, 212, 0.08);
+  --brand-ink: #99f6e4;
+  --brand-glow: rgba(94, 234, 212, 0.35);
+
+  /* 点缀色 —— CRT 荧光橙 */
+  --accent: #ffb088;
+  --accent-soft: rgba(255, 176, 136, 0.18);
+  --accent-softer: rgba(255, 176, 136, 0.08);
+  --accent-ink: #ffc8aa;
+
+  /* 辅助装饰色 */
+  --sakura: #f9a8d4;
+  --sakura-soft: rgba(249, 168, 212, 0.18);
+  --lemon: #fde68a;
+  --lemon-soft: rgba(253, 230, 138, 0.18);
+  --lavender: #c4b5fd;
+  --lavender-soft: rgba(196, 181, 253, 0.18);
+
+  /* 文字 */
+  --text-1: #f5f5f4;
+  --text-2: #b8b5ad;
+  --text-3: #6b6864;
+  --text-4: #3a3836;
+  --text-on-brand: #0b1110;
+  --text-on-accent: #0b1110;
+  --text-link: var(--brand);
+
+  /* 边框与分割线 */
+  --line: rgba(94, 234, 212, 0.12);
+  --line-soft: rgba(94, 234, 212, 0.06);
+  --line-strong: rgba(94, 234, 212, 0.22);
+  --line-dashed: rgba(184, 181, 173, 0.25);
+
+  /* 状态色（暗黑适配） */
+  --ok: #34d399;
+  --ok-soft: rgba(52, 211, 153, 0.18);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.18);
+  --err: #f87171;
+  --err-soft: rgba(248, 113, 113, 0.18);
+  --info: #60a5fa;
+  --info-soft: rgba(96, 165, 250, 0.18);
+
+  /* 阴影（深色+荧光辉光） */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.7);
+  --shadow-xl: 0 32px 64px rgba(0, 0, 0, 0.8);
+  --shadow-glow: 0 0 24px rgba(94, 234, 212, 0.25);
+  --shadow-glow-accent: 0 0 24px rgba(255, 176, 136, 0.25);
+  --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+
+  /* 渐变 */
+  --gradient-brand: linear-gradient(135deg, #5eead4 0%, #34d399 100%);
+  --gradient-brand-accent: linear-gradient(135deg, #5eead4 0%, #ffb088 100%);
+  --gradient-sunset: linear-gradient(135deg, #fde68a 0%, #ffb088 50%, #f9a8d4 100%);
+  --gradient-bg: radial-gradient(
+    ellipse at top left,
+    rgba(94, 234, 212, 0.08) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    ellipse at bottom right,
+    rgba(255, 176, 136, 0.06) 0%,
+    transparent 50%
+  );
+
+  /* 终端语义色 */
+  --term-user: #5eead4;
+  --term-at: #6b6864;
+  --term-host: #ffb088;
+  --term-colon: #6b6864;
+  --term-path: #c4b5fd;
+  --term-dollar: #b8b5ad;
+}
+
+/* ---------- 主题过渡 ---------- */
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+html,
+body {
+  transition: background-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out);
+}

@@ -1,12 +1,24 @@
 import {Bindings} from "./index";
+import {readConf} from "./db/conf";
+
+/**
+ * 读取 DCV 相关配置：Confs → env → ""
+ * 单次请求周期内多次访问同一 key 由 readConf 内部缓存兜底，性能与直读 env 接近。
+ */
+async function dcv(env: Bindings, name: "DCV_ZONES" | "DCV_EMAIL" | "DCV_TOKEN"): Promise<string> {
+    return (await readConf(env as any, name)) ?? "";
+}
 
 export async function dnsAdd(env: Bindings, domain_item: any, domain_name: string) {
+    const [zones, email, token] = await Promise.all([
+        dcv(env, "DCV_ZONES"), dcv(env, "DCV_EMAIL"), dcv(env, "DCV_TOKEN"),
+    ]);
     return dnsAPI(
-        "POST", `https://api.cloudflare.com/client/v4/zones/${env.DCV_ZONES}/dns_records`,
+        "POST", `https://api.cloudflare.com/client/v4/zones/${zones}/dns_records`,
         {
             'Content-Type': 'application/json',
-            'X-Auth-Email': env.DCV_EMAIL,
-            'X-Auth-Key': env.DCV_TOKEN,
+            'X-Auth-Email': email,
+            'X-Auth-Key': token,
         },
         JSON.stringify({
             comment: 'DCV-Agent#' + Date.now() + '@' + domain_name,
@@ -38,20 +50,26 @@ export async function dnsUID(env: Bindings, domain_name: string, domain_type: st
 }
 
 export async function dnsAll(env: Bindings) {
+    const [zones, email, token] = await Promise.all([
+        dcv(env, "DCV_ZONES"), dcv(env, "DCV_EMAIL"), dcv(env, "DCV_TOKEN"),
+    ]);
     return dnsAPI(
-        "GET", `https://api.cloudflare.com/client/v4/zones/${env.DCV_ZONES}/dns_records`,
+        "GET", `https://api.cloudflare.com/client/v4/zones/${zones}/dns_records`,
         {
-            'X-Auth-Email': env.DCV_EMAIL,
-            'X-Auth-Key': env.DCV_TOKEN,
+            'X-Auth-Email': email,
+            'X-Auth-Key': token,
         }, undefined)
 }
 
 export async function uidDel(env: Bindings, domain_uuid: string) {
+    const [zones, email, token] = await Promise.all([
+        dcv(env, "DCV_ZONES"), dcv(env, "DCV_EMAIL"), dcv(env, "DCV_TOKEN"),
+    ]);
     return dnsAPI(
-        "DELETE", `https://api.cloudflare.com/client/v4/zones/${env.DCV_ZONES}/dns_records/${domain_uuid}`,
+        "DELETE", `https://api.cloudflare.com/client/v4/zones/${zones}/dns_records/${domain_uuid}`,
         {
-            'X-Auth-Email': env.DCV_EMAIL,
-            'X-Auth-Key': env.DCV_TOKEN,
+            'X-Auth-Email': email,
+            'X-Auth-Key': token,
         }, undefined)
 }
 

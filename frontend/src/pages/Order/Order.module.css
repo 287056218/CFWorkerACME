@@ -1,0 +1,492 @@
+/* ============================================================
+ * Order 订单详情页样式
+ * ============================================================ */
+
+.greet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0 16px;
+  flex-wrap: wrap;
+}
+
+.cmdText {
+  font-family: var(--font-display);
+  color: var(--text-1);
+}
+
+.muted {
+  color: var(--text-3);
+  font-weight: var(--fw-normal);
+}
+
+.topActions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ---------- 进度条 ---------- */
+.progressWrap {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+  margin-bottom: 18px;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.progressLabel {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.progressStatus {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+}
+
+.progressStatus[data-status='ok'] {
+  color: var(--ok);
+}
+.progressStatus[data-status='warn'] {
+  color: var(--warn);
+}
+.progressStatus[data-status='err'] {
+  color: var(--err);
+}
+.progressStatus[data-status='info'] {
+  color: var(--info);
+}
+
+.progressTrack {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+.progressBlock {
+  height: 28px;
+  background: var(--bg-code);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  transition: all var(--duration-base) var(--ease-out);
+}
+
+.progressBlockLabel {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.progressBlockDone {
+  background: var(--brand-soft);
+}
+
+.progressBlockDone .progressBlockLabel {
+  color: var(--brand-ink);
+}
+
+.progressBlockCurrent {
+  background: var(--gradient-brand) !important;
+  box-shadow: 0 2px 8px var(--brand-glow);
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+.progressBlockCurrent .progressBlockLabel {
+  color: var(--text-on-brand) !important;
+}
+
+.progressBlockFailed {
+  background: var(--err-soft);
+}
+
+.progressBlockFailed .progressBlockLabel {
+  color: var(--err);
+}
+
+@keyframes progressPulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
+}
+
+/* ---------- 证书信息卡 ---------- */
+.certCard {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.descList {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.descRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line-dashed);
+}
+
+.descRow:last-child {
+  border-bottom: none;
+}
+
+.descKey {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.descVal {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-1);
+}
+
+.domainGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.infoMono {
+  font-family: var(--font-display);
+  color: var(--text-1);
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+.infoText {
+  font-family: var(--font-chinese);
+  color: var(--text-2);
+}
+
+.uuidRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- 域名验证卡 ---------- */
+.verifyCard {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.domainPanels {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.domainPanel {
+  background: var(--bg-canvas);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.domainPanelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.domainPanelHead:hover {
+  background: var(--brand-softer);
+}
+
+.domainPanelLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.domainPanelArrow {
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.domainPanelBody {
+  overflow: hidden;
+  border-top: 1px dashed var(--line-dashed);
+}
+
+.domainPanelInner {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hint {
+  font-family: var(--font-chinese);
+  font-size: 12.5px;
+  color: var(--text-2);
+  padding: 10px 14px;
+  background: var(--info-soft);
+  border-left: 3px solid var(--info);
+  border-radius: 8px;
+}
+
+/* ---------- DNS 记录表 ---------- */
+.dnsTable {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-code);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.dnsRow {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 8px;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.dnsRow:hover {
+  background: var(--bg-panel);
+}
+
+.dnsLabel {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dnsValue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dnsValueMono {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  color: var(--text-1);
+  font-weight: var(--fw-medium);
+  word-break: break-all;
+  background: var(--bg-panel);
+  padding: 4px 10px;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.dnsValueText {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-1);
+  font-weight: var(--fw-medium);
+  flex: 1;
+}
+
+.domainActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------- 底部操作栏 ---------- */
+.actionsBar {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: 20px 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  position: sticky;
+  bottom: 16px;
+  z-index: var(--z-sticky);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: var(--bg-glass);
+  box-shadow: var(--shadow-md);
+}
+
+/* ---------- 未找到 ---------- */
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 20px;
+  text-align: center;
+  color: var(--text-2);
+}
+
+.notFound h2 {
+  font-family: var(--font-chinese);
+  font-size: 18px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-1);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 768px) {
+  .progressTrack {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 24px;
+  }
+
+  .descRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 10px 0;
+  }
+
+  .dnsRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .certCard,
+  .verifyCard {
+    padding: 16px 18px;
+  }
+
+  .actionsBar {
+    padding: 14px 16px;
+    justify-content: center;
+  }
+}
+
+/* ---------- 危险操作确认弹窗 ---------- */
+.confirmIdWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.confirmIdHint {
+  font-family: var(--font-chinese);
+  font-size: 12.5px;
+  color: var(--text-2);
+  padding: 10px 12px;
+  background: var(--warn-soft, var(--info-soft));
+  border-left: 3px solid var(--warn, var(--info));
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+.confirmIdBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-code);
+  border: 1px dashed var(--line-dashed);
+  border-radius: 8px;
+}
+
+.confirmIdCode {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-1);
+  font-feature-settings: 'ss01', 'cv11';
+  letter-spacing: 0.02em;
+  padding: 4px 8px;
+  background: var(--bg-panel);
+  border-radius: 6px;
+  overflow-x: auto;
+  white-space: nowrap;
+  user-select: all;
+}
+
+.confirmIdCopyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: var(--fw-medium);
+  color: var(--text-2);
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.confirmIdCopyBtn:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+  background: var(--brand-softer);
+}
+
+.confirmIdCopyBtn:active {
+  transform: scale(0.96);
+}
+
+.confirmIdCopyBtnDone {
+  color: var(--ok) !important;
+  border-color: var(--ok) !important;
+  background: var(--ok-soft) !important;
+}
+
+.confirmIdError {
+  font-family: var(--font-chinese);
+  font-size: 12px;
+  color: var(--err);
+  padding-left: 2px;
+}

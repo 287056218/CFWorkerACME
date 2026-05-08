@@ -1,0 +1,340 @@
+.greet {
+  padding: 8px 0 20px;
+}
+
+.cmdText {
+  font-family: var(--font-display);
+  color: var(--text-1);
+}
+
+/* ---------- 工具栏 ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.search {
+  max-width: 320px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.searchIcon {
+  color: var(--text-3);
+}
+
+.filter {
+  flex-shrink: 0;
+}
+
+/* ---------- 卡片网格 ---------- */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+  overflow: hidden;
+}
+
+.card:hover {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-md);
+}
+
+.cardBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--card-bar, var(--text-3));
+}
+
+.card-ok .cardBar {
+  background: var(--ok);
+}
+
+.card-err .cardBar {
+  background: var(--err);
+}
+
+.card-warn .cardBar {
+  background: var(--warn);
+}
+
+.card-info .cardBar,
+.card-lavender .cardBar {
+  background: var(--info);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardDomains {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  border-top: 1px dashed var(--line-dashed);
+  border-bottom: 1px dashed var(--line-dashed);
+}
+
+.domainLine {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: var(--fw-medium);
+  color: var(--text-1);
+}
+
+.domainDot {
+  color: var(--brand);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.domainName {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+.domainMore {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-3);
+  padding-left: 16px;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-2);
+  font-family: var(--font-display);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.metaDot {
+  color: var(--text-4);
+}
+
+.cardFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+
+.cardTime {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: var(--font-display);
+  color: var(--text-3);
+}
+
+.cardActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 999px;
+  color: var(--text-2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.iconBtn:hover {
+  border-color: var(--brand);
+  background: var(--brand-softer);
+  color: var(--brand);
+}
+
+/* 警告色（吊销 / 清空私钥） */
+.iconBtnWarn {
+  color: var(--warn);
+}
+
+.iconBtnWarn:hover {
+  border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn);
+}
+
+/* 危险色（删除） */
+.iconBtnDanger {
+  color: var(--err);
+}
+
+.iconBtnDanger:hover {
+  border-color: var(--err);
+  background: color-mix(in srgb, var(--err) 12%, transparent);
+  color: var(--err);
+}
+
+.viewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--gradient-brand);
+  color: var(--text-on-brand);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  transition: all var(--duration-fast) var(--ease-out);
+  box-shadow: 0 2px 6px var(--brand-glow);
+}
+
+.viewBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px var(--brand-glow);
+  color: var(--text-on-brand);
+  filter: brightness(1.05);
+}
+
+/* ---------- 列表视图 ---------- */
+.listWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 8px;
+  overflow-x: auto;
+}
+
+.listRow {
+  display: grid;
+  grid-template-columns: 20px auto auto 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: background var(--duration-fast) var(--ease-out);
+  min-width: 900px;
+}
+
+.listRow:hover {
+  background: var(--brand-softer);
+}
+
+.listStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.listUuid {
+  font-size: 12px !important;
+}
+
+.listDomain {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+.listMeta {
+  display: inline-flex;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.listTime {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.listActions {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.emptyWrap {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 640px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search {
+    max-width: none;
+  }
+
+  .filter {
+    width: 100%;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,27 +1,45 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SSL证书助手</title>
-    <link href="static/style-all.css" rel="stylesheet"/>
-    <link href="static/bootstrap.css" rel="stylesheet">
-</head>
-<body>
-<div class="container">
-    <div class="form-container" style="max-width: 1600px;">
-        <h1>SSL证书助手</h1>
-        <div class="form-group" id="suffix_view" style="margin-bottom: 50px">
-            SSL证书助手是一个免费、开源的全自动化SSL证书申请和下发平台，依托于Cloudflare运行<br/>
-            本平台通过自动化CNAME和DNS操作，全自动验证域名DNS申请SSL证书，并自动下发到服务器
-        </div>
-        <div id="login_btn" class="buttons">
-            <button type="button" class="btn btn-primary" onclick="location.href='/panel.html?register=1'">控制台</button>
-            <button type="button" class="btn btn-success" onclick="location.href='/login.html'">登录</button>
-            <button type="button" class="btn btn-primary" onclick="location.href='/login.html?register=1'">注册</button>
-            <button type="button" class="btn btn-secondary" onclick="location.href='https://github.com/PIKACHUIM/CFWorkerACME'">Github</button>
-        </div>
-    </div>
-</div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#2EC4A6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0B1110" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="CertHub · 免费全自动 SSL 证书申请与下发平台" />
+
+    <!-- 预设主题，避免白屏闪烁 -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('cfacme-theme');
+          var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = stored === 'dark' || stored === 'light' ? stored : (systemDark ? 'dark' : 'light');
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+
+    <!-- 预连接字体 CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>CertHub · SSL 证书助手</title>
+    <script type="module" crossorigin src="/assets/index-DXwQFfZ8.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-antd-yx22OnMR.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-charts-BCQ0XO-O.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-utils-BIfJMkz8.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-react-BHf7umlk.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-COweoeL2.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

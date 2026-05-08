@@ -1,0 +1,149 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  max-height: 100vh;
+  padding: 24px 16px 16px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-self: flex-start;
+}
+
+/* ---------- 品牌区 ---------- */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 20px;
+  border-bottom: 1px dashed var(--line-dashed);
+  margin-bottom: 20px;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 1.2;
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+.brandSub {
+  font-family: var(--font-chinese);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ---------- 菜单标签 ---------- */
+.menuLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ---------- 菜单 ---------- */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* 管理员菜单与上方用户菜单之间的分组间距 */
+.menuAdmin {
+  margin-top: 18px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--text-2);
+  font-weight: var(--fw-medium);
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  position: relative;
+}
+
+.menuItem:hover {
+  background: var(--brand-softer);
+  color: var(--brand-ink);
+}
+
+.active {
+  background: var(--gradient-brand) !important;
+  color: var(--text-on-brand) !important;
+  box-shadow: 0 4px 12px var(--brand-glow);
+}
+
+.active .menuIcon {
+  color: var(--text-on-brand) !important;
+}
+
+.menuIcon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-3);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.menuItem:hover .menuIcon {
+  color: var(--brand);
+}
+
+.menuText {
+  flex: 1;
+  font-family: var(--font-body);
+}
+
+.menuBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.active .menuBadge {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--text-on-brand);
+}
+
+/* ---------- 底部 ---------- */
+.footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line-dashed);
+}
