@@ -13,7 +13,11 @@ import { useTheme } from '@hooks/useTheme';
 
 declare global {
   interface Window {
-    turnstile?: any;
+    turnstile?: {
+      render: (el: HTMLElement, options: any) => string;
+      reset: (widgetId?: string) => void;
+      remove: (widgetId: string) => void;
+    };
     hcaptcha?: any;
     grecaptcha?: any;
   }
@@ -77,7 +81,7 @@ export default function CertCaptcha({ onToken, className }: CertCaptchaProps) {
         // 销毁旧 widget
         try {
           if (provider === 'turnstile' && widgetIdRef.current && window.turnstile) {
-            window.turnstile.remove(widgetIdRef.current);
+            window.turnstile.remove(String(widgetIdRef.current));
           } else if (provider === 'hcaptcha' && widgetIdRef.current != null && window.hcaptcha) {
             window.hcaptcha.reset(widgetIdRef.current);
           } else if (provider === 'recaptcha' && widgetIdRef.current != null && window.grecaptcha) {
