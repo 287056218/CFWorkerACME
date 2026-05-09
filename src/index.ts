@@ -128,10 +128,25 @@ app.use('/apply/', async (c: Context): Promise<Response> => {
             text: "订单提交成功",
         })
         // 创建订单后立即推进一次状态机（生成 ACME 订单 + 写入 TXT 挑战记录）
+        // 若推进失败（如 ACME 服务端拒绝），把错误原因回显给前端，便于用户即时看到失败原因
+        let apply_warn: string | null = null;
         try {
             await certs.processOne(c.env, uuid);
+            // 再查一次订单，如果已经被置为失败状态（flag=-1），把 text 作为警告返回
+            const fresh: any = await saves.selectDB(
+                c.env.DB_CF, "Apply", {uuid: {value: uuid}});
+            if (fresh && fresh[0] && Number(fresh[0].flag) < 0) {
+                apply_warn = String(fresh[0].text || "证书申请处理失败");
+            }
         } catch (e) {
+            const {extractAcmeError} = await import("./certs");
+            apply_warn = "证书申请处理失败: " + extractAcmeError(e);
             console.error("apply processOne error:", e);
+        }
+        if (apply_warn) {
+            return c.json({
+                "flags": 11, "texts": apply_warn, "order": uuid,
+            }, 200);
         }
         return c.json({"flags": 0, "texts": "证书申请成功", "order": uuid}, 200);
     } catch (error) {
@@ -241,7 +256,26 @@ app.use('/order/', async (c: Context): Promise<Response> => {
             } else if (order_acts === "rm_key") {
                 await saves.updateDB(c.env.DB_CF, "Apply", {keys: ""}, {uuid: order_uuid})
             } else if (order_acts === "ca_del") {
-                // todo 发起吊销
+                // 吊销证书：支持通过 cd 参数传递 RFC5280 吊销原因码（数字 0/1/3/4/5 等）
+                let order_info = order_data[0];
+                let reason_raw = c.req.query('reason');
+                let reason_num = 0;
+                if (reason_raw === undefined || reason_raw === "") {
+                    // 兼容旧调用：cd 没有具体域名语义时可复用为原因码
+                    const cd_num = Number(order_push);
+                    if (Number.isFinite(cd_num)) reason_num = cd_num;
+                } else {
+                    const n = Number(reason_raw);
+                    if (Number.isFinite(n)) reason_num = n;
+                }
+                const revoke_res: any = await certs.revokeCert(c.env, order_info, reason_num);
+                if (revoke_res && revoke_res.flags !== 0) {
+                    return c.json({
+                        "flags": revoke_res.flags,
+                        "texts": revoke_res.texts,
+                        "order": order_acts,
+                    }, 400);
+                }
             } else
                 return c.json({"flags": 5, "texts": "请求操作无效", "order": order_acts});
             return c.json({"flags": 0, "texts": "执行操作成功", "order": order_acts});

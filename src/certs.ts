@@ -19,6 +19,82 @@ const acme_url_map: Record<string, any> = {
     "sslcom-trust": "https://acme.ssl.com/sslcom-dv-",
 }
 
+// 错误消息提取 ====================================================================================
+// 针对 acme-client / xior 抛出的错误对象，优先抽取 ACME Problem Details 中的友好信息，
+// 方便写入订单 text 字段后展示给用户。
+export function extractAcmeError(e: any): string {
+    if (!e) return "未知错误";
+    try {
+        // xior / axios 风格：错误对象自带 response.data
+        const resp = e.response ?? e?.config?.response;
+        const data = resp?.data;
+        // 附加的 HTTP / URL 上下文（便于排查）
+        const status: any = resp?.status ?? e?.status;
+        const statusText: string = resp?.statusText ?? e?.statusText ?? "";
+        const url: string = e?.request?.url ?? e?.config?.url ?? resp?.url ?? "";
+        const ctxParts: string[] = [];
+        if (status) ctxParts.push(`HTTP ${status}${statusText ? " " + statusText : ""}`);
+        if (url) ctxParts.push(url);
+        const ctx = ctxParts.length ? ` [${ctxParts.join(" @ ")}]` : "";
+
+        if (data) {
+            // 1) RFC 8555 Problem Details: { type, detail, status, subproblems }
+            if (typeof data === "object") {
+                const detail = data.detail || data.Detail || "";
+                const type = data.type || data.Type || "";
+                const subs: any[] = Array.isArray(data.subproblems) ? data.subproblems : [];
+                const subText = subs
+                    .map((s) => {
+                        const id = s?.identifier?.value ? `[${s.identifier.value}] ` : "";
+                        return id + (s?.detail || s?.type || "");
+                    })
+                    .filter(Boolean)
+                    .join("; ");
+                const core = [detail, subText].filter(Boolean).join(" | ");
+                if (core) return (type ? `${core} (${type})` : core) + ctx;
+                if (type) return type + ctx;
+                // 无 detail/type 时，把对象序列化做兜底
+                try {
+                    const jsonStr = JSON.stringify(data);
+                    if (jsonStr && jsonStr !== "{}") return jsonStr + ctx;
+                } catch { /* ignore */ }
+            }
+            // 2) 纯文本响应（典型：Cloudflare 网关返回的 `error code: 525` 等）
+            if (typeof data === "string" && data.trim()) {
+                const text = data.trim();
+                // 识别 Cloudflare 错误码，给出更友好的中文提示
+                const cfMatch = text.match(/error code:\s*(\d{3,4})/i);
+                if (cfMatch) {
+                    const code = cfMatch[1];
+                    const cfHint: Record<string, string> = {
+                        "520": "网关返回空响应",
+                        "521": "源站拒绝连接",
+                        "522": "源站连接超时",
+                        "523": "源站不可达",
+                        "524": "源站响应超时",
+                        "525": "SSL 握手失败（源站 TLS 配置异常）",
+                        "526": "源站 SSL 证书无效",
+                        "527": "Railgun 连接中断",
+                    };
+                    const hint = cfHint[code] || "网关错误";
+                    return `Cloudflare ${code} ${hint}：${text}${ctx}`;
+                }
+                return text + ctx;
+            }
+        }
+        // 3) acme-client 的 HTTPError / 普通 Error
+        if (e.message) return String(e.message) + ctx;
+        // 4) 完全无结构：尽力序列化
+        try {
+            const s = JSON.stringify(e);
+            if (s && s !== "{}") return s + ctx;
+        } catch { /* ignore */ }
+        return "未知错误" + ctx;
+    } catch {
+        return e?.message ? String(e.message) : String(e);
+    }
+}
+
 // 整体处理进程 ====================================================================================
 export async function Processing(env: Bindings) {
     let order_list: any = await saves.selectDB(env.DB_CF, "Apply", {flag: {value: 5, op: "!="}});
@@ -83,8 +159,17 @@ export async function processOne(env: Bindings, order_uuid: string) {
             else if (flag === 4) result.push(await getCerts(env, order_user, order_info));
             else break; // 其它未知状态，停止推进
         } catch (e) {
+            const msg = extractAcmeError(e);
             console.error("processOne error at flag=" + flag + ":", e);
-            result.push({"texts": "处理失败: " + (e as any)?.message});
+            // 将错误信息持久化到订单，供前端展示
+            try {
+                await saves.updateDB(env.DB_CF, "Apply",
+                    {flag: -1, text: "处理失败: " + msg},
+                    {uuid: order_uuid});
+            } catch (ue) {
+                console.error("processOne persist error failed:", ue);
+            }
+            result.push({"texts": "处理失败: " + msg});
             break;
         }
         // 若本轮处理后 flag 未推进，防止死循环
@@ -111,10 +196,20 @@ export async function newApply(env: Bindings, order_user: any, order_info: any) 
         await saves.updateDB(env.DB_CF, "Apply", {text: "订单创建成功"}, {uuid: order_info['uuid']})
         await saves.updateDB(env.DB_CF, "Apply", {data: orders_data}, {uuid: order_info['uuid']})
     } catch (e) {
-        console.error(e);
-        throw e;
-        // return {"texts": e};
-
+        const msg = extractAcmeError(e);
+        console.error("newApply createOrder failed:", e);
+        // 记录到订单：标记失败 + 写入明确错误原因，便于前端显示
+        try {
+            await saves.updateDB(env.DB_CF, "Apply",
+                {flag: -1, text: "订单创建失败: " + msg},
+                {uuid: order_info['uuid']});
+        } catch (ue) {
+            console.error("newApply persist error failed:", ue);
+        }
+        // 包装后再抛出，调用方（processOne）可直接使用
+        const wrapped: any = new Error(msg);
+        wrapped.cause = e;
+        throw wrapped;
     }
     return {"texts": "处理成功"};
     // ==============================================================================================
@@ -317,6 +412,60 @@ export async function getCerts(env: Bindings, order_user: any, order_info: any) 
         // await saves.updateDB(env.DB, "Apply", {data: ""}, {uuid: order_info['uuid']})
     }
     return {"texts": "处理成功"};
+}
+
+// 吊销证书 ########################################################################################
+// RFC 5280 吊销原因码（Let's Encrypt 目前常用支持：0/1/3/4/5）
+// 参考：https://datatracker.ietf.org/doc/html/rfc5280#section-5.3.1
+//  0 unspecified            未指定（默认）
+//  1 keyCompromise          密钥已泄露
+//  3 affiliationChanged     归属关系变更
+//  4 superseded             已被新证书替代
+//  5 cessationOfOperation   停止运营
+export const REVOKE_REASONS = new Set<number>([0, 1, 2, 3, 4, 5, 6, 8, 9, 10]);
+
+export async function revokeCert(env: Bindings, order_info: any, reason: number = 0) {
+    // 基本校验：必须存在证书原文 =====================================================================
+    const cert_pem: string = order_info?.cert || "";
+    if (!cert_pem || !/BEGIN CERTIFICATE/.test(cert_pem)) {
+        return {"flags": 5, "texts": "当前订单未签发证书，无需吊销"};
+    }
+    // 读取申请者信息用于获取 ACME 账户上下文 =========================================================
+    let order_user: any = (await saves.selectDB(
+        env.DB_CF, "Users", {mail: {value: order_info['mail']}}))[0];
+    if (!order_user) return {"flags": 5, "texts": "找不到订单对应的用户信息"};
+    // 组装 ACME Client ============================================================================
+    let client_data: any;
+    try {
+        client_data = await getStart(env, order_user, order_info);
+    } catch (e) {
+        const msg = extractAcmeError(e);
+        return {"flags": 5, "texts": "ACME 账户初始化失败: " + msg};
+    }
+    if (client_data == null) return {"flags": 5, "texts": "ACME 账户初始化失败"};
+    // 规整 reason 参数 =============================================================================
+    let reason_code = Number(reason);
+    if (!Number.isFinite(reason_code) || !REVOKE_REASONS.has(reason_code)) reason_code = 0;
+    // 调用 ACME 吊销接口 ===========================================================================
+    try {
+        await client_data.revokeCertificate(cert_pem, {reason: reason_code});
+    } catch (e: any) {
+        const msg = extractAcmeError(e);
+        console.error("revokeCert acme error:", e);
+        // 记录失败原因，但不修改订单状态，允许用户重新尝试
+        try {
+            await saves.updateDB(env.DB_CF, "Apply",
+                {text: "证书吊销失败: " + msg},
+                {uuid: order_info['uuid']});
+        } catch {/* ignore */}
+        return {"flags": 5, "texts": "证书吊销失败: " + msg};
+    }
+    // 吊销成功：更新订单状态为已失效（-1），并清空 cert/keys，便于用户重新申请 =========================
+    const timestamp = Date.now();
+    await saves.updateDB(env.DB_CF, "Apply",
+        {flag: -1, text: "证书已吊销 (reason=" + reason_code + ")", next: timestamp},
+        {uuid: order_info['uuid']});
+    return {"flags": 0, "texts": "证书吊销成功"};
 }
 
 // 获取域名信息 ####################################################################################

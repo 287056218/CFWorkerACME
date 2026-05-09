@@ -252,14 +252,21 @@ export async function userRegs(c: Context) {
             // 新注册用户（flag 原为 0）需要初始化 quota 与 is_admin；
             // 重置密码路径（flag 已为 1）保留原 quota / is_admin，不被回溯。
             const isFreshRegister = Number(user_data_in["flag"] ?? 0) === 0;
+            // ACME 账户私钥：
+            //   - 新注册：务必生成并存入 keys 字段（后续申请证书直接复用，无需再在申请时生成）
+            //   - 重置密码：保留原 keys（避免与 CA 侧账号失联）；仅当历史账号缺失时补生成
+            const existing_keys: string = String(user_data_in["keys"] ?? "");
+            const keep_keys = !isFreshRegister && existing_keys.length > 0;
             const updates: Record<string, any> = {
                 code: "",
                 flag: "1",
-                keys: privateKey.export({type: 'pkcs8', format: 'pem'}),
                 pass: data_text,
                 apis: await newNonce(16),
                 time: Date.now(),
             };
+            if (!keep_keys) {
+                updates["keys"] = privateKey.export({type: 'pkcs8', format: 'pem'});
+            }
             if (isFreshRegister) {
                 try {
                     const {readInt} = await import("./db/conf");

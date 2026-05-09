@@ -5,6 +5,7 @@ import {
   ArrowRight,
   Archive,
   Clock,
+  Copy,
   Download,
   FileLock2,
   FileStack,
@@ -24,9 +25,11 @@ import SectionHeader from '@components/Layout/SectionHeader';
 import TerminalPrompt from '@components/molecules/TerminalPrompt';
 import EmptyState from '@components/molecules/EmptyState';
 import StatusPulse from '@components/molecules/StatusPulse';
+import ConfirmIdContent from '@components/molecules/ConfirmIdContent';
+import RevokeReasonSelect from '@components/molecules/RevokeReasonSelect';
 import Pill from '@components/atoms/Pill';
-import CodeInline from '@components/atoms/CodeInline';
-import { listOrders, operateOrder } from '@api/order';
+import { useCopy } from '@hooks/useCopy';
+import { listOrders, operateOrder, RevokeReason } from '@api/order';
 import type { OrderRaw } from '@api/types';
 import {
   FLAG_MAP,
@@ -38,7 +41,6 @@ import {
   fmtDate,
   fmtRelative,
   safeJsonParse,
-  shortenId,
 } from '@utils/format';
 import { classifyFlag, expiredDays, remainDays, type OrderStatus } from '@utils/order';
 import { randomKaomoji } from '@utils/kaomoji';
@@ -88,6 +90,7 @@ const STATUS_TEXT: Record<OrderStatus, string> = {
 
 export default function Certs() {
   const { message, modal } = App.useApp();
+  const { copy } = useCopy();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<OrderRaw[]>([]);
   const [view, setView] = useState<View>('card');
@@ -160,62 +163,102 @@ export default function Certs() {
     }
   };
 
-  const handleDelete = (uuid: string) => {
-    modal.confirm({
-      title: '确认删除订单？',
-      content:
-        '该订单的所有信息将被永久删除，包含证书、私钥、验证记录等。此操作不可恢复。',
-      okText: '确认删除',
+  /**
+   * 通用“危险操作”弹窗：
+   * - requireConfirmId: 强制用户输入完整订单号后才可确认
+   * - pickRevokeReason: 吊销证书时额外展示“吊销原因”选择器
+   */
+  const openDangerConfirm = (opts: {
+    title: string;
+    tip?: string;
+    uuid: string;
+    okText: string;
+    pickRevokeReason?: boolean;
+    run: (reason?: RevokeReason) => Promise<void>;
+  }) => {
+    let matched = false;
+    let reason: RevokeReason = RevokeReason.Unspecified;
+    const instance = modal.confirm({
+      title: opts.title,
+      icon: null,
+      okText: opts.okText,
       cancelText: '取消',
-      okButtonProps: { danger: true },
+      width: 520,
+      okButtonProps: { danger: true, disabled: true },
+      content: (
+        <div>
+          <ConfirmIdContent
+            expectId={opts.uuid}
+            hint={opts.tip}
+            onMatchChange={(m) => {
+              matched = m;
+              instance.update({
+                okButtonProps: { danger: true, disabled: !m },
+              });
+            }}
+          />
+          {opts.pickRevokeReason && (
+            <RevokeReasonSelect
+              onChange={(r) => {
+                reason = r;
+                instance.update({
+                  okButtonProps: { danger: true, disabled: !matched },
+                });
+              }}
+            />
+          )}
+        </div>
+      ),
       onOk: async () => {
         try {
-          await operateOrder(uuid, 'cancel');
-          message.success(`订单已删除 ${randomKaomoji('success')}`);
-          load();
+          await opts.run(opts.pickRevokeReason ? reason : undefined);
         } catch {
           /* 拦截器已 toast */
         }
+      },
+    });
+  };
+
+  const handleDelete = (uuid: string) => {
+    openDangerConfirm({
+      title: '确认删除订单？',
+      tip: '该订单的所有信息（证书、私钥、验证记录）将被永久删除，此操作不可恢复。请输入完整订单 ID 以确认。',
+      uuid,
+      okText: '确认删除',
+      run: async () => {
+        await operateOrder(uuid, 'cancel');
+        message.success(`订单已删除 ${randomKaomoji('success')}`);
+        load();
       },
     });
   };
 
   const handleRemoveKey = (uuid: string) => {
-    modal.confirm({
+    openDangerConfirm({
       title: '确认清空私钥？',
-      content:
-        '私钥清空后将无法再下载，也无法使用私钥续期/吊销证书；证书本身仍可保留。此操作不可恢复，请先确保已保存本地副本。',
+      tip: '私钥清空后将无法再下载，也无法使用私钥续期/吊销证书；证书本身仍可保留。此操作不可恢复，请先确保已保存本地副本，并输入完整订单 ID 以确认。',
+      uuid,
       okText: '确认清空',
-      cancelText: '取消',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await operateOrder(uuid, 'rm_key');
-          message.success(`私钥已清空 ${randomKaomoji('success')}`);
-          load();
-        } catch {
-          /* 拦截器已 toast */
-        }
+      run: async () => {
+        await operateOrder(uuid, 'rm_key');
+        message.success(`私钥已清空 ${randomKaomoji('success')}`);
+        load();
       },
     });
   };
 
   const handleRevoke = (uuid: string) => {
-    modal.confirm({
+    openDangerConfirm({
       title: '确认吊销证书？',
-      content:
-        '吊销后该证书会被 CA 标记为无效，所有使用该证书的服务将无法正常工作。此操作不可恢复。',
+      tip: '吊销后该证书会被 CA 标记为无效，使用该证书的服务都将无法正常工作。此操作不可恢复，请输入完整订单 ID 并选择吊销原因。',
+      uuid,
       okText: '确认吊销',
-      cancelText: '取消',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          await operateOrder(uuid, 'ca_del');
-          message.success(`证书已吊销 ${randomKaomoji('success')}`);
-          load();
-        } catch {
-          /* 拦截器已 toast */
-        }
+      pickRevokeReason: true,
+      run: async (reason) => {
+        await operateOrder(uuid, 'ca_del', undefined,
+          reason !== undefined ? { revokeReason: reason } : undefined);
+        message.success(`证书已吊销 ${randomKaomoji('success')}`);
+        load();
       },
     });
   };
@@ -322,6 +365,7 @@ export default function Certs() {
                   key={o.uuid}
                   order={o}
                   index={i}
+                  onCopyId={() => copy(o.uuid, '订单 ID 已复制')}
                   onDownloadCert={() => handleDownload(o.uuid, 'cert')}
                   onDownloadKey={() => handleDownload(o.uuid, 'key')}
                   onDownloadZip={() => handleDownloadZip(o.uuid, message)}
@@ -345,6 +389,7 @@ export default function Certs() {
                   key={o.uuid}
                   order={o}
                   index={i}
+                  onCopyId={() => copy(o.uuid, '订单 ID 已复制')}
                   onDownloadCert={() => handleDownload(o.uuid, 'cert')}
                   onDownloadZip={() => handleDownloadZip(o.uuid, message)}
                   onDownloadPfx={() => handleDownloadPfx(o.uuid, message)}
@@ -368,6 +413,7 @@ export default function Certs() {
 interface OrderCardProps {
   order: OrderRaw;
   index: number;
+  onCopyId: () => void;
   onDownloadCert: () => void;
   onDownloadKey: () => void;
   onDownloadZip: () => void;
@@ -409,6 +455,7 @@ function renderExpiryBadge(order: OrderRaw, status: OrderStatus) {
 function OrderCard({
   order,
   index,
+  onCopyId,
   onDownloadCert,
   onDownloadKey,
   onDownloadZip,
@@ -443,7 +490,17 @@ function OrderCard({
             {STATUS_TEXT[status] || FLAG_MAP[order.flag] || '未知'}
           </Pill>
         </div>
-        <CodeInline>{shortenId(order.uuid, 10)}</CodeInline>
+        <div className={styles.uuidRow}>
+          <span className={styles.uuidFull} title={order.uuid}>{order.uuid}</span>
+          <button
+            type="button"
+            className={styles.uuidCopyBtn}
+            onClick={onCopyId}
+            title="复制订单 ID"
+          >
+            <Copy size={12} />
+          </button>
+        </div>
       </div>
 
       <div className={styles.cardDomains}>
@@ -563,6 +620,7 @@ function OrderCard({
 function OrderRow({
   order,
   index,
+  onCopyId,
   onDownloadCert,
   onDownloadZip,
   onDownloadPfx,
@@ -572,6 +630,7 @@ function OrderRow({
 }: {
   order: OrderRaw;
   index: number;
+  onCopyId: () => void;
   onDownloadCert: () => void;
   onDownloadZip: () => void;
   onDownloadPfx: () => void;
@@ -603,7 +662,17 @@ function OrderRow({
           {STATUS_TEXT[status] || FLAG_MAP[order.flag]}
         </Pill>
       </div>
-      <CodeInline className={styles.listUuid}>{shortenId(order.uuid, 12)}</CodeInline>
+      <div className={styles.uuidRow}>
+        <span className={styles.uuidFull} title={order.uuid}>{order.uuid}</span>
+        <button
+          type="button"
+          className={styles.uuidCopyBtn}
+          onClick={onCopyId}
+          title="复制订单 ID"
+        >
+          <Copy size={12} />
+        </button>
+      </div>
       <div className={styles.listDomain}>
         {list.map((d) => d.name).join(', ')}
       </div>

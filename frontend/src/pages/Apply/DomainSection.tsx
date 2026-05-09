@@ -9,6 +9,26 @@ import styles from './Apply.module.css';
 
 const MAX_DOMAINS = 10;
 
+/**
+ * 清理域名输入：
+ * - 去除所有空白字符（含全角空格、制表符、换行等）
+ * - 只保留合法的域名字符：字母、数字、`.`、`-`、`*`
+ * - 统一转为小写，避免 ACME 服务端因大小写差异或非法字符拒绝
+ * - 去除开头的 `.`、`-`
+ */
+export function sanitizeDomainInput(raw: string): string {
+  if (!raw) return '';
+  let v = raw
+    // 去除各种空白（空格、全角空格、零宽空格、制表符、换行等）
+    .replace(/[\s\u00A0\u3000\u200B-\u200D\uFEFF]/g, '')
+    // 去除除合法字符外的所有字符
+    .replace(/[^a-zA-Z0-9.*\-]/g, '')
+    .toLowerCase();
+  // 去除开头的 . 和 -
+  v = v.replace(/^[.\-]+/, '');
+  return v;
+}
+
 export interface DomainSectionProps {
   domains: DomainRowForm[];
   onChange: (domains: DomainRowForm[]) => void;
@@ -71,9 +91,23 @@ export default function DomainSection({
               <Input
                 size="large"
                 value={d.domain}
-                onChange={(e) => updateRow(d.id, { domain: e.target.value })}
+                onChange={(e) =>
+                  updateRow(d.id, { domain: sanitizeDomainInput(e.target.value) })
+                }
+                onPaste={(e) => {
+                  // 粘贴时同样做一次清理（处理剪贴板带前导空格/中文等常见场景）
+                  const text = e.clipboardData.getData('text');
+                  const cleaned = sanitizeDomainInput(text);
+                  if (cleaned !== text) {
+                    e.preventDefault();
+                    updateRow(d.id, { domain: cleaned });
+                  }
+                }}
                 placeholder="example.com"
                 className={styles.domainInput}
+                maxLength={253}
+                autoComplete="off"
+                spellCheck={false}
               />
 
               <div className={styles.domainControls}>

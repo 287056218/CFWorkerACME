@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { App, Button, Input, Skeleton, Spin } from 'antd';
+import { App, Button, Skeleton, Spin } from 'antd';
 import {
   ArrowLeft,
-  Check,
   Copy,
   RefreshCw,
 } from 'lucide-react';
 import PageShell from '@components/Layout/PageShell';
 import TerminalPrompt from '@components/molecules/TerminalPrompt';
 import Kaomoji from '@components/molecules/Kaomoji';
+import ConfirmIdContent from '@components/molecules/ConfirmIdContent';
+import RevokeReasonSelect from '@components/molecules/RevokeReasonSelect';
 import { useCopy } from '@hooks/useCopy';
-import { getOrder, operateOrder } from '@api/order';
+import { getOrder, operateOrder, RevokeReason } from '@api/order';
 import type { Order, OrderAction } from '@api/types';
 import { FLAG_PULSE, FLAG_COLOR } from '@utils/constants';
 import { downloadAsFile, shortenId } from '@utils/format';
@@ -57,16 +58,27 @@ export default function OrderPage() {
       confirm?: string;
       danger?: boolean;
       filename?: string;
+      /** 需要用户输入此字段值才能确认（通常传订单ID） */
       requireConfirmId?: string;
+      /** 吊销证书时的原因选择（仅 ca_del 有效） */
+      pickRevokeReason?: boolean;
     },
   ) => {
     if (!uuid) return;
+
+    // 吊销原因（仅在 ca_del + pickRevokeReason 时使用）
+    let revokeReason: RevokeReason = RevokeReason.Unspecified;
 
     const run = async () => {
       setActionTip(ACTION_TIP[action] || '处理中，请稍候...');
       setOperating(true);
       try {
-        const result = await operateOrder(uuid, action, domainName);
+        const result = await operateOrder(
+          uuid,
+          action,
+          domainName,
+          action === 'ca_del' ? { revokeReason } : undefined,
+        );
         if (action === 'ca_get' || action === 'ca_key') {
           if (result) {
             downloadAsFile(
@@ -94,6 +106,7 @@ export default function OrderPage() {
 
     if (opts?.requireConfirmId) {
       const expectId = opts.requireConfirmId;
+      let matched = false;
       const instance = modal.confirm({
         title: opts.confirm || '危险操作确认',
         icon: null,
@@ -102,14 +115,28 @@ export default function OrderPage() {
         width: 480,
         okButtonProps: { danger: !!opts.danger, disabled: true },
         content: (
-          <ConfirmIdContent
-            expectId={expectId}
-            onMatchChange={(matched) =>
-              instance.update({
-                okButtonProps: { danger: !!opts.danger, disabled: !matched },
-              })
-            }
-          />
+          <div>
+            <ConfirmIdContent
+              expectId={expectId}
+              onMatchChange={(m) => {
+                matched = m;
+                instance.update({
+                  okButtonProps: { danger: !!opts.danger, disabled: !m },
+                });
+              }}
+            />
+            {opts.pickRevokeReason && (
+              <RevokeReasonSelect
+                onChange={(r) => {
+                  revokeReason = r;
+                  // 维持当前 matched 状态，仅更新颜色
+                  instance.update({
+                    okButtonProps: { danger: !!opts.danger, disabled: !matched },
+                  });
+                }}
+              />
+            )}
+          </div>
         ),
         onOk: run,
       });
@@ -243,69 +270,3 @@ const ACTION_TIP: Record<string, string> = {
   ca_del: '正在吊销证书...',
   rm_key: '正在清理私钥...',
 };
-
-/* ============================================================
- * 内部组件：危险操作确认弹窗内容
- * 显示完整证书 ID + 一键复制，要求用户手动输入 ID 才能确认
- * ============================================================ */
-interface ConfirmIdContentProps {
-  expectId: string;
-  onMatchChange: (matched: boolean) => void;
-}
-
-function ConfirmIdContent({ expectId, onMatchChange }: ConfirmIdContentProps) {
-  const { copy } = useCopy();
-  const [value, setValue] = useState('');
-  const [copied, setCopied] = useState(false);
-
-  const matched = value.trim() === expectId;
-
-  useEffect(() => {
-    onMatchChange(matched);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matched]);
-
-  const handleCopy = async () => {
-    const ok = await copy(expectId, '证书 ID 已复制');
-    if (ok) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
-  };
-
-  return (
-    <div className={styles.confirmIdWrap}>
-      <div className={styles.confirmIdHint}>
-        为了避免误操作，请输入完整的证书 ID 以确认操作。
-      </div>
-      <div className={styles.confirmIdBox}>
-        <code className={styles.confirmIdCode}>{expectId}</code>
-        <button
-          type="button"
-          className={[
-            styles.confirmIdCopyBtn,
-            copied && styles.confirmIdCopyBtnDone,
-          ]
-            .filter(Boolean)
-            .join(' ')}
-          onClick={handleCopy}
-          title="一键复制证书 ID"
-        >
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-          <span>{copied ? '已复制' : '复制'}</span>
-        </button>
-      </div>
-      <Input
-        autoFocus
-        placeholder="粘贴或输入上方证书 ID"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        status={value && !matched ? 'error' : undefined}
-        allowClear
-      />
-      {value && !matched && (
-        <div className={styles.confirmIdError}>ID 不匹配，请检查后重试</div>
-      )}
-    </div>
-  );
-}

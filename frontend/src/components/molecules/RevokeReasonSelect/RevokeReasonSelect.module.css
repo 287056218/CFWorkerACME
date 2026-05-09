@@ -1,0 +1,27 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.label {
+  font-family: var(--font-chinese);
+  font-size: 12.5px;
+  color: var(--text-2);
+  font-weight: var(--fw-medium);
+}
+
+.select {
+  width: 100%;
+}
+
+.desc {
+  font-size: 11.5px;
+  color: var(--text-3);
+  line-height: 1.5;
+  padding: 6px 10px;
+  background: var(--bg-code);
+  border-radius: 6px;
+  border-left: 2px solid var(--brand);
+}

@@ -281,6 +281,60 @@
   font-size: 12px !important;
 }
 
+/* 完整 UUID 行（卡片头部 + 列表） ----------------------------- */
+.uuidRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.uuidFull {
+  font-family: var(--font-mono, var(--font-display));
+  font-size: 11.5px;
+  color: var(--text-2);
+  background: var(--bg-panel-soft, rgba(127, 127, 127, 0.06));
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-feature-settings: 'ss01', 'cv11';
+  max-width: 100%;
+  user-select: all;
+}
+
+.cardHead .uuidFull {
+  max-width: 220px;
+}
+
+.listRow .uuidFull {
+  max-width: 260px;
+}
+
+.uuidCopyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-3);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.uuidCopyBtn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-softer);
+}
+
 .listDomain {
   font-family: var(--font-display);
   font-size: 13px;

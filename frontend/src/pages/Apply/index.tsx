@@ -142,9 +142,16 @@ export default function Apply() {
         message.warning('请至少填写一个有效域名');
         return false;
       }
+      // 简单格式校验：不允许包含空格/中文/非法字符，避免 ACME 服务端拒绝
+      const DOMAIN_RE = /^(?:\*\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
       for (const d of state.domains) {
-        if (!d.domain.trim()) {
+        const v = (d.domain || '').trim();
+        if (!v) {
           message.error('存在空的域名输入');
+          return false;
+        }
+        if (!DOMAIN_RE.test(v)) {
+          message.error(`域名格式非法：“${v}”（不能包含空格/中文/特殊字符）`);
           return false;
         }
       }
@@ -187,13 +194,14 @@ export default function Apply() {
     }
     setSubmitting(true);
     try {
-      // 组装 payload
+      // 组装 payload（统一去除空格 + 转小写，避免 ACME 服务端拒绝）
       const domainList: DomainItem[] = [];
       for (const d of state.domains) {
-        if (!d.domain) continue;
+        const name = (d.domain || '').trim().toLowerCase();
+        if (!name) continue;
         if (!d.wildcard || d.includeRoot) {
           domainList.push({
-            name: d.domain,
+            name,
             wild: false,
             root: d.includeRoot,
             type: d.verification,
@@ -201,7 +209,7 @@ export default function Apply() {
         }
         if (d.wildcard) {
           domainList.push({
-            name: `*.${d.domain}`,
+            name: `*.${name}`,
             wild: true,
             root: d.includeRoot,
             type: d.verification,
@@ -225,9 +233,43 @@ export default function Apply() {
         },
       };
 
-      const uuid = await applyCert(payload, captchaEnabled ? captchaToken : undefined);
-      message.success('申请提交成功 ✨');
-      setTimeout(() => navigate(`/order/${uuid}`), 600);
+      const { uuid, warning } = await applyCert(
+        payload,
+        captchaEnabled ? captchaToken : undefined,
+      );
+      if (warning) {
+        // 后端已创建订单，但 ACME 推进失败：用弹窗展示完整错误原因，确认后展示订单详情
+        modal.error({
+          title: '证书申请提交成功，但处理失败',
+          content: (
+            <div>
+              <div style={{ marginBottom: 8 }}>请根据以下错误原因调整并重新提交：</div>
+              <div
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  fontFamily:
+                    'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+                  fontSize: 12,
+                  padding: 10,
+                  borderRadius: 8,
+                  background: 'rgba(255, 77, 79, 0.08)',
+                  color: 'var(--text-1)',
+                  border: '1px solid rgba(255, 77, 79, 0.3)',
+                }}
+              >
+                {warning}
+              </div>
+            </div>
+          ),
+          okText: '查看订单',
+          onOk: () => navigate(`/order/${uuid}`),
+          width: 560,
+        });
+      } else {
+        message.success('申请提交成功 ✨');
+        setTimeout(() => navigate(`/order/${uuid}`), 600);
+      }
     } catch (e: any) {
       message.error(e?.texts || e?.message || '申请失败');
     } finally {

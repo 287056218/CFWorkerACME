@@ -28,6 +28,8 @@ export interface OrderActionsProps {
       filename?: string;
       /** 需要用户输入此字段值才能确认（通常传订单ID） */
       requireConfirmId?: string;
+      /** 吊销证书时是否提示选择原因 */
+      pickRevokeReason?: boolean;
     },
   ) => void;
 }
@@ -203,6 +205,7 @@ export default function OrderActions({
                 confirm: '确认吊销此证书？吊销后证书将被 CA 标记为无效，使用该证书的服务都将无法正常工作',
                 danger: true,
                 requireConfirmId: order.uuid,
+                pickRevokeReason: true,
               })
             }
           >
