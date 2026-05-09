@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SectionHeader from '@components/Layout/SectionHeader';
 import Kaomoji from '@components/molecules/Kaomoji';
 import type { DomainRowForm } from './index';
-import { AUTH_OPTIONS } from '@utils/constants';
+import { AUTH_OPTIONS, AUTH_OPTIONS_IP } from '@utils/constants';
 import styles from './Apply.module.css';
 
 const MAX_DOMAINS = 10;
@@ -27,6 +27,16 @@ export function sanitizeDomainInput(raw: string): string {
   // 去除开头的 . 和 -
   v = v.replace(/^[.\-]+/, '');
   return v;
+}
+
+/**
+ * 清理 IP 地址输入：
+ * - 去除空白字符
+ * - 只保留数字和 `.`
+ */
+export function sanitizeIPInput(raw: string): string {
+  if (!raw) return '';
+  return raw.replace(/[\s\u00A0\u3000\u200B-\u200D\uFEFF]/g, '').replace(/[^0-9.]/g, '');
 }
 
 export interface DomainSectionProps {
@@ -92,20 +102,24 @@ export default function DomainSection({
                 size="large"
                 value={d.domain}
                 onChange={(e) =>
-                  updateRow(d.id, { domain: sanitizeDomainInput(e.target.value) })
+                  updateRow(d.id, {
+                    domain: d.isIP
+                      ? sanitizeIPInput(e.target.value)
+                      : sanitizeDomainInput(e.target.value),
+                  })
                 }
                 onPaste={(e) => {
                   // 粘贴时同样做一次清理（处理剪贴板带前导空格/中文等常见场景）
                   const text = e.clipboardData.getData('text');
-                  const cleaned = sanitizeDomainInput(text);
+                  const cleaned = d.isIP ? sanitizeIPInput(text) : sanitizeDomainInput(text);
                   if (cleaned !== text) {
                     e.preventDefault();
                     updateRow(d.id, { domain: cleaned });
                   }
                 }}
-                placeholder="example.com"
+                placeholder={d.isIP ? '192.168.1.1' : 'example.com'}
                 className={styles.domainInput}
-                maxLength={253}
+                maxLength={d.isIP ? 15 : 253}
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -114,23 +128,39 @@ export default function DomainSection({
                 <label className={styles.switchLabel}>
                   <Switch
                     size="small"
-                    checked={d.wildcard}
-                    onChange={(c) => updateRow(d.id, { wildcard: c })}
+                    checked={d.isIP}
+                    onChange={(c) => updateRow(d.id, {
+                      isIP: c,
+                      // 勾选IP证书时：强制WEB验证、禁用通配符
+                      ...(c ? { wildcard: false, includeRoot: false, verification: 'web-self' as const } : {}),
+                    })}
                   />
-                  <span>通配符 (*.)</span>
+                  <span>IP 证书</span>
                 </label>
-                <label className={styles.switchLabel}>
-                  <Switch
-                    size="small"
-                    checked={d.includeRoot}
-                    onChange={(c) => updateRow(d.id, { includeRoot: c })}
-                  />
-                  <span>包含根域名</span>
-                </label>
+                {!d.isIP && (
+                  <label className={styles.switchLabel}>
+                    <Switch
+                      size="small"
+                      checked={d.wildcard}
+                      onChange={(c) => updateRow(d.id, { wildcard: c })}
+                    />
+                    <span>通配符 (*.)</span>
+                  </label>
+                )}
+                {!d.isIP && (
+                  <label className={styles.switchLabel}>
+                    <Switch
+                      size="small"
+                      checked={d.includeRoot}
+                      onChange={(c) => updateRow(d.id, { includeRoot: c })}
+                    />
+                    <span>包含根域名</span>
+                  </label>
+                )}
               </div>
 
               <Segmented
-                options={AUTH_OPTIONS}
+                options={d.isIP ? AUTH_OPTIONS_IP : AUTH_OPTIONS}
                 value={d.verification}
                 onChange={(v) =>
                   updateRow(d.id, { verification: v as DomainRowForm['verification'] })

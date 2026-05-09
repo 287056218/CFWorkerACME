@@ -37,6 +37,7 @@ interface DomainRowForm {
   wildcard: boolean;
   includeRoot: boolean;
   verification: 'dns-self' | 'dns-auto' | 'web-self';
+  isIP: boolean;
 }
 
 interface FormState {
@@ -59,6 +60,7 @@ const DEFAULT_DOMAIN = (): DomainRowForm => ({
   wildcard: false,
   includeRoot: true,
   verification: 'dns-self',
+  isIP: false,
 });
 
 const STEPS = [
@@ -144,14 +146,20 @@ export default function Apply() {
       }
       // 简单格式校验：不允许包含空格/中文/非法字符，避免 ACME 服务端拒绝
       const DOMAIN_RE = /^(?:\*\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+      const IP_RE = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
       for (const d of state.domains) {
         const v = (d.domain || '').trim();
         if (!v) {
           message.error('存在空的域名输入');
           return false;
         }
-        if (!DOMAIN_RE.test(v)) {
-          message.error(`域名格式非法：“${v}”（不能包含空格/中文/特殊字符）`);
+        if (d.isIP) {
+          if (!IP_RE.test(v)) {
+            message.error(`IP 地址格式非法："${v}"`);
+            return false;
+          }
+        } else if (!DOMAIN_RE.test(v)) {
+          message.error(`域名格式非法："${v}"（不能包含空格/中文/特殊字符）`);
           return false;
         }
       }
@@ -199,21 +207,32 @@ export default function Apply() {
       for (const d of state.domains) {
         const name = (d.domain || '').trim().toLowerCase();
         if (!name) continue;
-        if (!d.wildcard || d.includeRoot) {
+        if (d.isIP) {
+          // IP证书：不支持通配符，验证方式强制web-self
           domainList.push({
             name,
             wild: false,
-            root: d.includeRoot,
-            type: d.verification,
+            root: false,
+            type: 'web-self',
+            isIP: true,
           });
-        }
-        if (d.wildcard) {
-          domainList.push({
-            name: `*.${name}`,
-            wild: true,
-            root: d.includeRoot,
-            type: d.verification,
-          });
+        } else {
+          if (!d.wildcard || d.includeRoot) {
+            domainList.push({
+              name,
+              wild: false,
+              root: d.includeRoot,
+              type: d.verification,
+            });
+          }
+          if (d.wildcard) {
+            domainList.push({
+              name: `*.${name}`,
+              wild: true,
+              root: d.includeRoot,
+              type: d.verification,
+            });
+          }
         }
       }
 

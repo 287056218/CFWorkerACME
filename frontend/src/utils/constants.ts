@@ -104,6 +104,11 @@ export const AUTH_OPTIONS = [
   { value: 'web-self', label: 'WEB 文件验证' },
 ];
 
+// IP证书模式下只允许WEB验证
+export const AUTH_OPTIONS_IP = [
+  { value: 'web-self', label: 'WEB 文件验证' },
+];
+
 // 订单操作
 export const AUTH_ACT_MAP: Record<string, string> = {
   verify: '验证全部',

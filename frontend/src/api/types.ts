@@ -17,6 +17,7 @@ export interface DomainItem {
   wild: boolean;
   root: boolean;
   type: 'dns-self' | 'dns-auto' | 'web-self';
+  isIP?: boolean;
   // 后端返回额外字段
   flag?: number;
   text?: string;

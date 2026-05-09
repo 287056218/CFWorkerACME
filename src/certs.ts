@@ -247,6 +247,10 @@ export async function setApply(env: Bindings, order_user: any, order_info: any) 
         }
         // console.log(author_save);
         domain_item['auth'] = author_save[domain_name]['text'];
+        // 对于http-01验证（web-self），额外保存token用于前端展示验证路径
+        if (author_save[domain_name]['data']?.type === 'http-01') {
+            domain_item['token'] = author_save[domain_name]['data']['token'];
+        }
         domain_item.flag = 2
         if (domain_item['type'] == "dns-auto") {
             let domain_auto = await hmacSHA2(domain_name.replaceAll("*.", ""), order_user['mail'])
@@ -320,7 +324,10 @@ export async function dnsAuthy(env: Bindings, order_user: any, order_info: any) 
     let status_flag: number = 4;
     let domain_fail: string[] = [];
     for (let domain_item of JSON.parse(domain_list)) { // 验证DNS
-        let author_flag: boolean = await dnsCheck(author_save, domain_item)
+        // web-self（http-01验证）不需要DNS检查，直接提交验证
+        let author_flag: boolean = domain_item.type === "web-self"
+            ? (author_save[domain_item.name] != undefined)
+            : await dnsCheck(author_save, domain_item)
         if (status_flag == -1) {
             domain_save.push(domain_item);
             continue
@@ -477,16 +484,16 @@ async function getNames(order_info: any, full: boolean = false) {
         const domain_now = domain_data[uid];
         // console.log("domain_now: ", domain_now);
         const author_now = domain_now['type'].split("-")[0]
-        // if (domain_now['wild']) { // 先处理通配符的情况 =======================================
-        //     if (full) domain_save.push({type: author_now, value: "*." + domain_now['name']});
-        //     else domain_save.push("*." + domain_now['name']);
-        // } // 如果不是通配符，或者通配符勾选了根域名的情况，也要添加域名本身 ===================
-        // else {
-        //     if (full) domain_save.push({type: author_now, value: domain_now['name']});
-        //     else domain_save.push(domain_now['name']);
-        // }
-        if (full) domain_save.push({type: author_now, value: domain_now['name']});
-        else domain_save.push(domain_now['name']);
+        // 判断是否为IP证书
+        const isIP = !!domain_now['isIP'];
+        if (full) {
+            domain_save.push({
+                type: isIP ? 'ip' : author_now,
+                value: domain_now['name']
+            });
+        } else {
+            domain_save.push(domain_now['name']);
+        }
     }
     return domain_save;
 }
@@ -562,13 +569,22 @@ async function getAuthy(client_data: any, orders_data: any) {
         if (author_data['wildcard'] === true)
             author_name = "*." + author_name;
         // let author_type: string = author_info['type'];
-        // 查找DNS验证信息 =================================
+        // 查找验证信息（优先dns-01，IP证书使用http-01）=================================
         let author_save = undefined
         // console.log(author_data)
         for (const c of author_data['challenges']) {
             if (c.type === "dns-01") {
                 author_save = c
                 break
+            }
+        }
+        // 如果没有dns-01（如IP证书），尝试http-01
+        if (author_save == undefined) {
+            for (const c of author_data['challenges']) {
+                if (c.type === "http-01") {
+                    author_save = c
+                    break
+                }
             }
         }
         if (author_save == undefined) continue
