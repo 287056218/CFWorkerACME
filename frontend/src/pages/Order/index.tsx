@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { App, Button, Input, Skeleton } from 'antd';
+import { App, Button, Input, Skeleton, Spin } from 'antd';
 import {
   ArrowLeft,
   Check,
@@ -30,6 +30,7 @@ export default function OrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [operating, setOperating] = useState(false);
+  const [actionTip, setActionTip] = useState('处理中，请稍候...');
 
   const load = async () => {
     if (!uuid) return;
@@ -62,6 +63,7 @@ export default function OrderPage() {
     if (!uuid) return;
 
     const run = async () => {
+      setActionTip(ACTION_TIP[action] || '处理中，请稍候...');
       setOperating(true);
       try {
         const result = await operateOrder(uuid, action, domainName);
@@ -215,9 +217,32 @@ export default function OrderPage() {
         operating={operating}
         onAction={handleAction}
       />
+
+      {/* 操作中全屏遮罩 ===================================== */}
+      <Spin
+        spinning={operating}
+        fullscreen
+        size="large"
+        tip={actionTip}
+      />
     </PageShell>
   );
 }
+
+/* 动作对应的忙碌文案 */
+const ACTION_TIP: Record<string, string> = {
+  process: '正在处理订单，请稍候...',
+  verify: '正在验证域名，请稍候...',
+  single: '正在验证该域名，请稍候...',
+  reload: '正在重新生成验证信息...',
+  modify: '正在修改申请，请稍候...',
+  cancel: '正在取消订单...',
+  re_new: '正在发起续期流程...',
+  ca_get: '正在下载证书...',
+  ca_key: '正在下载密钥...',
+  ca_del: '正在吊销证书...',
+  rm_key: '正在清理私钥...',
+};
 
 /* ============================================================
  * 内部组件：危险操作确认弹窗内容

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { App, Button, Form, Tag } from 'antd';
+import { App, Button, Form, Spin, Tag } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -491,6 +491,14 @@ export default function Apply() {
           </div>
         </aside>
       </div>
+
+      {/* 提交中全屏遮罩 ===================================== */}
+      <Spin
+        spinning={submitting}
+        fullscreen
+        size="large"
+        tip="正在提交申请，请稍候..."
+      />
     </PageShell>
   );
 }

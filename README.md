@@ -1,61 +1,112 @@
+<div align="center">
+
+# 🔐 CertHub · SSL 证书助手
+
+**基于 Cloudflare Worker / EdgeOne Pages 的全自动化 SSL 证书申请与下发平台**
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
+[![EdgeOne](https://img.shields.io/badge/Tencent-EdgeOne-00A4FF?logo=tencentqq&logoColor=white)](https://edgeone.ai/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Hono](https://img.shields.io/badge/Built%20with-Hono-E36002)](https://hono.dev/)
+
+[English](#english) · [快速部署](#-一键部署) · [在线演示](#-在线演示) · [使用文档](#-配置说明) · [常见问题](#-常见问题)
+
+</div>
+
+---
+
+## 📖 项目介绍
+
+**CertHub（SSL 证书助手）** 是一个 **免费、开源、全自动化** 的 SSL 证书申请与下发平台，依托 Cloudflare Workers / Tencent EdgeOne Pages 等 Serverless 平台运行，**无需服务器即可部署**。
+
+通过自动化的 CNAME 与 DNS 操作，平台可以全自动完成域名验证、申请证书并将其同步下发到任意服务器或客户端。
+
+### ✨ 核心优势
+
+- 🚀 **无服务器部署**：依托 Cloudflare Worker / EdgeOne Pages，**完全免费**，亦支持私有化部署
+- 🔁 **一次配置，永久使用**：支持 DCV 代理与自动验证，**只需设置一次 CNAME 记录**即可永久续期
+- 🏢 **多服务器同步**：相比 `acme.sh` 单机使用，更适合 **多服务器、内网共享** 同一证书的场景
+- 🌐 **多 CA 支持**：内置 `Let's Encrypt`、`ZeroSSL`、`Google Trust Service`、`SSL.com` 四大主流 CA
+- 🎨 **现代化管理后台**：终端风格 UI，支持证书全生命周期管理（申请 / 续期 / 吊销 / 下载 PFX / ZIP）
+- 🔌 **完整 API**：提供完整 RESTful API，方便接入到 1Panel / 宝塔 / 自建系统
+
+---
+
+## 🖼️ 项目截图
+
+### 管理控制台
+
+> 终端风格的实时仪表盘，一目了然查看证书总览、订单状态与最新动态。
+<p align="center">
+  <img src="images/QQ20250506-153642.png" alt="CertHub 证书详情页" width="900" />
+</p>
 
 
-# SSL Helper - SSL Cert Apply Agent on CloudFlare Worker
 
-# SSL证书助手 - 基于CF Worker 的SSL证书代理申请平台
+### 证书订单详情
 
+> 支持查看完整签发流程进度，并提供 **下载证书 / 下载密钥 / ZIP / PFX / 续期 / 吊销** 等一站式操作。
 
+<p align="center">
+  <img src="images/QQ20250506-153705.png" alt="CertHub 管理控制台" width="900" />
+</p>
 
-## 项目介绍
+---
 
-SSL证书助手是一个免费、开源的全自动化SSL证书申请和下发平台，依托于Cloudflare运行
+## 🌍 在线演示
 
-本平台通过自动化CNAME和DNS操作，全自动验证域名DNS申请SSL证书，并自动下发到服务器，本项目优势：
+- 演示站点：<https://newssl.524228.xyz/>
 
-1. 不依赖服务器即可部署，支持私有化部署，依托于CloudFlare Worker，**完全免费**
-2. 支持手动验证和自动化验证（DCV代理），**只需设置一次CNAME记录一直可以使用**
-3. 支持`Let's Encrypt`、`ZeroSSL`、`Google Trust Service`、`SSL.com`等证书提供商
+> ⚠️ 演示平台 **不会主动泄漏您的密钥数据**，但出于安全考虑，建议在生产环境使用自己的 Cloudflare 账号私有化部署。
 
+---
 
+## 🚀 一键部署
 
+| Cloudflare Workers (全球) | EdgeOne Pages (国际) | EdgeOne Pages (中国) |
+| :---: | :---: | :---: |
+| [<img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare Workers" width="220" />](https://deploy.workers.cloudflare.com/?url=https://github.com/PIKACHUIM/CFWorkerACMEs) | [<img src="https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg" alt="使用 EdgeOne Pages 部署" width="220" />](https://edgeone.ai/pages/new?project-name=oplist-api&repository-url=https://github.com/PIKACHUIM/CFWorkerACME&build-command=npm%20run%20build-eo&install-command=npm%20install&output-directory=public&root-directory=./) | [<img src="https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg" alt="使用 EdgeOne Pages 部署" width="220" />](https://console.cloud.tencent.com/edgeone/pages/new?project-name=oplist-api&repository-url=https://github.com/PIKACHUIM/CFWorkerACME&build-command=npm%20run%20build-eo&install-command=npm%20install&output-directory=public&root-directory=./) |
 
-## 使用方式
-### 一键部署
+---
 
+## 🛠️ 技术栈
 
-|                   Cloudflare Worker 全球站                   |                                                                                                                                 EdgeOsne Functions 国际站                                                                                                                                 |                   EdgeOne Functions 中国站                   |
-| :----------------------------------------------------------: |:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:| :----------------------------------------------------------: |
-| [<img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare Workers" style="width:400px;heigh:200px" />](https://deploy.workers.cloudflare.com/?url=https://github.com/PIKACHUIM/CFWorkerACMEs) | [<img src="https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg" alt="使用 EdgeOne Pages 部署" style="width:400px;heigh:200px" />](https://edgeone.ai/pages/new?project-name=oplist-api&repository-url=https://github.com/PIKACHUIM/CFWorkerACME&build-command=npm%20run%20build-eo&install-command=npm%20install&output-directory=public&root-directory=./) | [<img src="https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg" alt="使用 EdgeOne Pages 部署" style="width:400px;heigh:200px" />](https://console.cloud.tencent.com/edgeone/pages/new?project-name=oplist-api&repository-url=https://github.com/PIKACHUIM/CFWorkerACME&build-command=npm%20run%20build-eo&install-command=npm%20install&output-directory=public&root-directory=./) |
+| 层级 | 技术 |
+| :--- | :--- |
+| **运行时** | Cloudflare Workers · EdgeOne Pages Functions · Node.js (Docker) |
+| **后端** | [Hono](https://hono.dev/) · [acme-client](https://github.com/publishlab/node-acme-client) · `node-forge` · `crypto-js` |
+| **前端** | React · Vite · TypeScript |
+| **存储** | Cloudflare D1 (SQLite) |
+| **邮件** | [Resend](https://resend.com/) |
 
+---
 
-### 演示地址
+## 📦 本地开发与部署
 
-- https://newssl.524228.xyz/
+### 1. 克隆代码
 
-<img src="img/QQ20250506-153642.png" alt="QQ20250506-153642" style="zoom:50%;" />
-
-<img src="img/QQ20250506-153705.png" alt="QQ20250506-153705" style="zoom:67%;" />
-
-
-### 克隆代码
-
-```shell
+```bash
 git clone https://github.com/PIKACHUIM/CFWorkerACME.git
+cd CFWorkerACME
 ```
 
-### 修改配置
+### 2. 安装依赖
 
-- #### 复制文件
+```bash
+npm install
+npm run web-install
+```
 
-```shell
+### 3. 配置环境变量
+
+复制示例配置文件并按需修改：
+
+```bash
 cp wrangler.example.jsonc wrangler.jsonc
 ```
 
-- #### 修改配置
-
-  修改`wrangler.jsonc`
-
-```json
+```jsonc
 {
   "vars": {
     "MAIL_KEYS": "",
@@ -65,19 +116,9 @@ cp wrangler.example.jsonc wrangler.jsonc
     "DCV_EMAIL": "account@example.com",
     "DCV_TOKEN": "",
     "DCV_ZONES": "",
-    "GTS_useIt": "",
-    "GTS_keyMC": "",
-    "GTS_keyID": "",
-    "GTS_KeyTS": "",
-    "SSL_useIt": "true",
-    "SSL_keyMC": "",
-    "SSL_keyID": "",
-    "SSL_KeyTS": "",
-    "ZRO_useIt": "true",
-    "ZRO_keyMC": "",
-    "ZRO_keyID": "",
-    "ZRO_KeyTS": ""
-
+    "GTS_useIt": "", "GTS_keyMC": "", "GTS_keyID": "", "GTS_KeyTS": "",
+    "SSL_useIt": "true", "SSL_keyMC": "", "SSL_keyID": "", "SSL_KeyTS": "",
+    "ZRO_useIt": "true", "ZRO_keyMC": "", "ZRO_keyID": "", "ZRO_KeyTS": ""
   },
   "d1_databases": [
     {
@@ -87,113 +128,170 @@ cp wrangler.example.jsonc wrangler.jsonc
     }
   ]
 }
-
 ```
 
-- #### 参数说明
+### 4. 本地调试
 
-| 名称      | 类型   | 说明                                                         | 示例/备注                                                    |
-| --------- | ------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| MAIL_KEYS | string | Resend密钥：[API Keys · Resend](https://resend.com/api-keys) | re_wvRR+z5AqmL3rAXp8CQW0BWKX                                 |
-| MAIL_SEND | string | Resend邮箱：[API Keys · Resend](https://resend.com/api-keys) | noreply@example.com                                          |
-| SIGN_AUTH | string | Cookie/用户验证签名加密固定密钥                              | PCUG8dc9Yal4ufhe2SRn3NJRJ+flg/B42s1uaUNk8p0a0lG2hw34qP       |
-| DCV_AGENT | string | CloudFlare DCV代理域名-域名根                                | dcv.example.com                                              |
-| DCV_EMAIL | string | CloudFlare DCV代理域名API邮箱                                | user@example.com                                             |
-| DCV_TOKEN | string | CloudFlare DCV代理域名APIKey                                 | NiYqP+IVOlCn63ED1W4JXvH+PyaAUNFyoWJ08F13xbbXvCqUb70，查看https://dash.cloudflare.com/profile/api-tokens |
-| DCV_ZONES | string | CloudFlare DCV代理域名-区域ID                                | 10a7bab949e8245578235d18da54f1d3，查看https://dash.cloudflare.com/ |
-| GTS_useIt | string | Google Trust Service 是否要开启                              | true，使用方式查看 https://cloud.google.com/certificate-manager/docs/public-ca-tutorial?hl=zh-cn |
-| GTS_keyMC | string | Google Trust Service EAB-MAC                                 | I828b1O/O+S9Z4uE+v32dudUcUTlWc7iDF7rke+6LT6iwa39EihPS61UadY70xKF |
-| GTS_keyID | string | Google Trust Service EAB账号ID                               | ede55645ca95b5ce89ceb8a8c047132c                             |
-| GTS_KeyTS | string | Google Trust Service ACME密钥                                | -----BEGIN PRIVATE KEY----.....                              |
-| SSL_useIt | string | SSL.com ACME 服务是否要开启                                  | true，获取：https://secure.ssl.com/account                   |
-| SSL_keyMC | string | SSL.com ACME 服务 EAB-MAC                                    | I828b1O/O+S9Z4uE+v32dudUcUTlWc7iDF7rke+6LT6iwa39EihPS61UadY70xKF |
-| SSL_keyID | string | SSL.com ACME 服务 EAB账号ID                                  | ede55645ca95b5ce89ceb8a8c047132c                             |
-| SSL_KeyTS | string | SSL.com ACME 服务 ACME密钥                                   | -----BEGIN PRIVATE KEY----.....                              |
-| ZRO_useIt | string | ZeroSSL ACME服务 是否要开启                                  | true，获取：[Developer - ZeroSSL](https://app.zerossl.com/developer) |
-| ZRO_keyMC | string | ZeroSSL ACME服务  EAB-MAC                                    | I828b1O/O+S9Z4uE+v32dudUcUTlWc7iDF7rke+6LT6iwa39EihPS61UadY70xKF |
-| ZRO_keyID | string | ZeroSSL ACME服务  EAB账号ID                                  | ede55645ca95b5ce89ceb8a8c047132c                             |
-| ZRO_KeyTS | string | ZeroSSL ACME服务  ACME密钥                                   | -----BEGIN PRIVATE KEY----.....                              |
+```bash
+# Cloudflare Workers 本地调试
+npm run dev-cf
 
+# EdgeOne Pages 本地调试
+npm run dev-eo
 
-
-### 测试代码
-```shell
-npm install
-npm run dev
+# 仅前端调试
+npm run web-dev
 ```
 
-### 部署云端
-```shell
-npm run deploy
+### 5. 部署到云端
+
+```bash
+# 部署到 Cloudflare Workers
+npm run deploy-cf
+
+# 部署到 EdgeOne Pages
+npm run deploy-eo
 ```
 
-## 备注说明
+### 6. Docker 部署（可选）
 
-1. `Let's Encrypt`在CloudFlare Worker上会抛出SSL连接失败问题，导致525错误，
-   我们设置了一个代理到此供应商`https://encrys.524228.xyz/directory`，
-   你可以使用nginx+下列参数代理：
+```bash
+docker compose up -d
+```
 
-   ```nginx
-   location ^~ /directory
-   {
-       proxy_pass https://acme-v02.api.letsencrypt.org/directory;
-       sub_filter acme-v02.api.letsencrypt.org encrys.524228.xyz;
-       sub_filter_types *;
-       sub_filter_once off;
-       proxy_set_header Host acme-v02.api.letsencrypt.org;
-       proxy_set_header Accept-Encoding "";
-       proxy_set_header X-Real-IP $remote_addr;
-       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-       proxy_set_header REMOTE-HOST $remote_addr;
-       proxy_set_header Upgrade $http_upgrade;
-       proxy_set_header Connection $connection_upgrade;
-       proxy_http_version 1.1;
-       proxy_hide_header Upgrade;
-       add_header X-Cache $upstream_cache_status;
-       add_header Cache-Control no-cache;
-   }
-   location /acme/ {
-       proxy_pass https://acme-v02.api.letsencrypt.org/acme/;
-       proxy_set_header Host $Host;
-       proxy_set_header X-Real-IP $remote_addr;
-       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-       proxy_set_header REMOTE-HOST $remote_addr;
-       proxy_set_header Upgrade $http_upgrade;
-       proxy_set_header Connection $connection_upgrade;
-       proxy_http_version 1.1;
-       proxy_hide_header Upgrade;
-       add_header X-Cache $upstream_cache_status;
-       add_header Cache-Control no-cache;
-   }
-   
-   ```
-   
-### 常见问题
+> 项目同时提供 `Dockerfile` 与 `Dockerfile-Lite` 两种镜像方案，可按需选用。
 
-- 有`acme.sh`了，为什么还需要`SSL证书助手`？
-  > 1、`acme.sh`脚本主要是给单机证书申请使用的，本项目是为了解决多服务器/内网共用SSL证书，可以通过网页或者API同步证书。
-  > 2、`acme.sh`使用`TXT`验证或者申请通配符证书的时候，而`SSL证书助手`只需要设置一次`CNAME`记录即可永久使用。
-  > 3、`acme.sh`并不是人人都熟悉，如果你比较喜欢`acme.sh`并且没有上述需求，直接使用`acme.sh`就好了。
+---
 
-- 这个和`宝塔`或者`1Panel ` SSL证书申请有什么区别？
-  > 没什么区别，只是把申请验证过程移到了服务端，方便DCV代理和同步，
-  > 实际上这个平台更接近来此加密（https://lcjm.cc/） 的功能和模式
+## ⚙️ 配置说明
 
-- 这个平台安全可靠吗
-  > 演示平台不会主动泄漏您的密钥数据，但无法保证您的证书密钥完全安全。
-  > 不过你可以使用自己的Cloudflare账号部署一个私有的实例，完全开源的。
+### 通用配置
 
+| 名称 | 类型 | 说明 | 示例 / 备注 |
+| :--- | :--- | :--- | :--- |
+| `MAIL_KEYS` | string | Resend API Key（用于邮件通知） | `re_wvRR+z5AqmL3rAXp8CQW0BWKX` · [获取地址](https://resend.com/api-keys) |
+| `MAIL_SEND` | string | Resend 发件邮箱 | `noreply@example.com` |
+| `SIGN_AUTH` | string | Cookie / 用户验证签名加密密钥（自定义随机串） | `PCUG8dc9Yal4ufhe2SRn3NJRJ+flg/B42s1uaUNk8p0a0lG2hw34qP` |
 
-## 项目赞助
-本项目 CDN 加速及安全防护由 Tencent EdgeOne 赞助：EdgeOne 提供长期有效的免费套餐，包含不限量的流量和请求，覆盖中国大陆节点，且无任何超额收费，感兴趣的朋友可以点击下面的链接领取：
-[亚洲最佳CDN、边缘和安全解决方案 - Tencent EdgeOne](https://edgeone.ai/zh?from=github)
+### DCV 自动验证代理（推荐配置）
 
-<img src="https://edgeone.ai/media/34fe3a45-492d-4ea4-ae5d-ea1087ca7b4b.png" alt="EdgeOne" style="width:400px" />
+> 配置 DCV 代理后，**只需设置一次 CNAME 记录** 即可永久自动续期。
 
+| 名称 | 类型 | 说明 | 示例 / 备注 |
+| :--- | :--- | :--- | :--- |
+| `DCV_AGENT` | string | CloudFlare DCV 代理域名（根域名） | `dcv.example.com` |
+| `DCV_EMAIL` | string | CloudFlare 账号邮箱 | `user@example.com` |
+| `DCV_TOKEN` | string | CloudFlare API Key | [API Tokens](https://dash.cloudflare.com/profile/api-tokens) |
+| `DCV_ZONES` | string | CloudFlare Zone ID | [Dashboard](https://dash.cloudflare.com/) |
 
+### CA 厂商配置
 
-## 引用链接
+每个 CA 都遵循 `XXX_useIt` / `XXX_keyMC` / `XXX_keyID` / `XXX_KeyTS` 的命名规则：
 
-> - [acmesh-official/acme.sh: A pure Unix shell script implementing ACME client protocol](https://github.com/acmesh-official/acme.sh)
-> - [publishlab/node-acme-client: Simple and unopinionated ACME client for Node.js](https://github.com/publishlab/node-acme-client)
+| 前缀 | CA 厂商 | 获取地址 |
+| :--- | :--- | :--- |
+| `GTS_` | Google Trust Service | [Google Public CA Tutorial](https://cloud.google.com/certificate-manager/docs/public-ca-tutorial?hl=zh-cn) |
+| `SSL_` | SSL.com ACME | [SSL.com Account](https://secure.ssl.com/account) |
+| `ZRO_` | ZeroSSL ACME | [ZeroSSL Developer](https://app.zerossl.com/developer) |
 
+| 字段 | 含义 |
+| :--- | :--- |
+| `XXX_useIt` | 是否启用该 CA（`true` / 留空） |
+| `XXX_keyMC` | EAB-MAC 密钥 |
+| `XXX_keyID` | EAB 账号 ID |
+| `XXX_KeyTS` | ACME 私钥（PEM 格式） |
+
+> 💡 **Let's Encrypt** 默认在 Cloudflare Workers 上会出现 SSL 525 错误，需要使用 Nginx 反向代理（见下方[备注说明](#-备注说明)）。
+
+---
+
+## 📝 备注说明
+
+### Let's Encrypt 反向代理配置
+
+`Let's Encrypt` 在 Cloudflare Worker 上会抛出 SSL 连接失败问题（525 错误）。本项目默认使用代理 `https://encrys.524228.xyz/directory`，你也可以使用 Nginx 自建：
+
+```nginx
+location ^~ /directory {
+    proxy_pass https://acme-v02.api.letsencrypt.org/directory;
+    sub_filter acme-v02.api.letsencrypt.org encrys.524228.xyz;
+    sub_filter_types *;
+    sub_filter_once off;
+    proxy_set_header Host acme-v02.api.letsencrypt.org;
+    proxy_set_header Accept-Encoding "";
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_http_version 1.1;
+    add_header X-Cache $upstream_cache_status;
+    add_header Cache-Control no-cache;
+}
+
+location /acme/ {
+    proxy_pass https://acme-v02.api.letsencrypt.org/acme/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_http_version 1.1;
+    add_header X-Cache $upstream_cache_status;
+    add_header Cache-Control no-cache;
+}
+```
+
+---
+
+## ❓ 常见问题
+
+<details>
+<summary><b>Q：已经有 <code>acme.sh</code> 了，为什么还需要 CertHub？</b></summary>
+
+1. **多机共享**：`acme.sh` 是单机证书申请脚本；CertHub 解决 **多服务器 / 内网共用同一证书** 的同步下发问题，可通过网页或 API 同步证书。
+2. **永久 CNAME**：`acme.sh` 申请通配符证书时需要重复设置 TXT 记录；CertHub **只需设置一次 CNAME** 即可永久续期。
+3. **零门槛**：如果你熟悉 `acme.sh` 且没有上述需求，使用 `acme.sh` 也完全够用。
+
+</details>
+
+<details>
+<summary><b>Q：和宝塔 / 1Panel 的 SSL 证书申请功能有什么区别？</b></summary>
+
+定位类似来此加密（<https://lcjm.cc/>），把申请验证过程移到了 **服务端 / Serverless 平台**，更方便 DCV 代理与多端同步。
+
+</details>
+
+<details>
+<summary><b>Q：演示平台安全可靠吗？</b></summary>
+
+演示平台 **不会主动泄漏** 您的密钥数据，但无法保证您的证书密钥 100% 安全。如对安全性有较高要求，**强烈建议使用自己的 Cloudflare / EdgeOne 账号私有化部署**。本项目完全开源，可审计。
+
+</details>
+
+---
+
+## 💚 项目赞助
+
+本项目 CDN 加速及安全防护由 **Tencent EdgeOne** 赞助：EdgeOne 提供长期有效的免费套餐，包含不限量的流量和请求，覆盖中国大陆节点，且无任何超额收费。
+
+🔗 [亚洲最佳 CDN、边缘和安全解决方案 - Tencent EdgeOne](https://edgeone.ai/zh?from=github)
+
+<p align="center">
+  <img src="https://edgeone.ai/media/34fe3a45-492d-4ea4-ae5d-ea1087ca7b4b.png" alt="EdgeOne" width="400" />
+</p>
+
+---
+
+## 🔗 引用与致谢
+
+- [acmesh-official/acme.sh](https://github.com/acmesh-official/acme.sh) — A pure Unix shell script implementing ACME client protocol
+- [publishlab/node-acme-client](https://github.com/publishlab/node-acme-client) — Simple and unopinionated ACME client for Node.js
+- [Hono](https://hono.dev/) — Ultrafast web framework for the Edges
+
+---
+
+## 📄 License
+
+本项目基于 [Apache License 2.0](LICENSE) 开源，欢迎贡献代码与提出建议！
+
+<div align="center">
+
+**如果这个项目对你有帮助，请点一颗 ⭐ Star 支持一下！**
+
+</div>

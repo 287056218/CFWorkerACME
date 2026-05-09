@@ -65,7 +65,8 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<PlayCircle size={16} />}
-            disabled={!isVerifiable}
+            disabled={!isVerifiable || operating}
+            loading={operating}
             onClick={() =>
               onAction('verify', undefined, {
                 confirm: '确认触发全部域名的验证？',
@@ -77,7 +78,8 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<RotateCcw size={16} />}
-            disabled={!isVerifiable}
+            disabled={!isVerifiable || operating}
+            loading={operating}
             onClick={() =>
               onAction('reload', undefined, {
                 confirm: '确认重新生成验证信息？原有的 DNS 记录将失效',
@@ -89,7 +91,8 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<Pencil size={16} />}
-            disabled={!isVerifiable}
+            disabled={!isVerifiable || operating}
+            loading={operating}
             onClick={() =>
               onAction('modify', undefined, {
                 confirm: '确认修改申请？当前订单将被删除',
@@ -103,6 +106,8 @@ export default function OrderActions({
             danger
             size="large"
             icon={<XCircle size={16} />}
+            loading={operating}
+            disabled={operating}
             onClick={() =>
               onAction('cancel', undefined, {
                 confirm: '确认撤销此订单？此操作不可恢复',
@@ -134,7 +139,8 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<Key size={16} />}
-            disabled={!hasKey}
+            disabled={!hasKey || operating}
+            loading={operating}
             onClick={() =>
               onAction('ca_key', undefined, {
                 filename: `${order.uuid}.pem`,
@@ -146,7 +152,7 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<Archive size={16} />}
-            disabled={!hasKey}
+            disabled={!hasKey || operating}
             onClick={() => handleDownloadZip(order.uuid, message)}
           >
             下载 ZIP
@@ -154,7 +160,7 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<FileLock2 size={16} />}
-            disabled={!hasKey}
+            disabled={!hasKey || operating}
             onClick={() => handleDownloadPfx(order.uuid, message)}
           >
             下载 PFX
@@ -162,6 +168,8 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<RotateCcw size={16} />}
+            loading={operating}
+            disabled={operating}
             onClick={() =>
               onAction('re_new', undefined, {
                 confirm: '确认续期此证书？将重新发起签发流程',
@@ -173,7 +181,8 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<Trash2 size={16} />}
-            disabled={!hasKey}
+            disabled={!hasKey || operating}
+            loading={operating}
             onClick={() =>
               onAction('rm_key', undefined, {
                 confirm: '确认清空本地私钥？清空后无法使用私钥吊销或续期证书，此操作不可恢复',
@@ -187,7 +196,8 @@ export default function OrderActions({
           <Button
             size="large"
             icon={<ShieldOff size={16} />}
-            disabled={!hasKey}
+            disabled={!hasKey || operating}
+            loading={operating}
             onClick={() =>
               onAction('ca_del', undefined, {
                 confirm: '确认吊销此证书？吊销后证书将被 CA 标记为无效，使用该证书的服务都将无法正常工作',
@@ -202,6 +212,8 @@ export default function OrderActions({
             danger
             size="large"
             icon={<XCircle size={16} />}
+            loading={operating}
+            disabled={operating}
             onClick={() =>
               onAction('cancel', undefined, {
                 confirm: '确认删除此订单？所有相关信息将丢失',

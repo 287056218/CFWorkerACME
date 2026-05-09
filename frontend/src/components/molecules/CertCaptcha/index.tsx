@@ -11,18 +11,6 @@ import { useEffect, useRef } from 'react';
 import { useBootstrapStore } from '@stores/useBootstrapStore';
 import { useTheme } from '@hooks/useTheme';
 
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (el: HTMLElement, options: any) => string;
-      reset: (widgetId?: string) => void;
-      remove: (widgetId: string) => void;
-    };
-    hcaptcha?: any;
-    grecaptcha?: any;
-  }
-}
-
 const SCRIPTS: Record<string, string> = {
   turnstile: 'https://challenges.cloudflare.com/turnstile/v0/api.js',
   hcaptcha: 'https://js.hcaptcha.com/1/api.js',

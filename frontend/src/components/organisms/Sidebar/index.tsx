@@ -48,6 +48,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     <NavLink
       key={item.path}
       to={item.path}
+      end
       onClick={onNavigate}
       className={({ isActive }) =>
         [styles.menuItem, isActive && styles.active].filter(Boolean).join(' ')

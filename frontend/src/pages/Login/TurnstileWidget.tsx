@@ -2,17 +2,6 @@ import { useEffect, useRef } from 'react';
 import { TURNSTILE_SITE_KEY } from '@utils/constants';
 import { useTheme } from '@hooks/useTheme';
 
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (el: HTMLElement, options: any) => string;
-      reset: (widgetId?: string) => void;
-      remove: (widgetId: string) => void;
-    };
-    __turnstileLoaded?: boolean;
-  }
-}
-
 const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 
 function loadTurnstileScript(): Promise<void> {
