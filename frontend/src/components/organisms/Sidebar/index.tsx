@@ -3,6 +3,8 @@ import {
   Activity,
   BookOpen,
   FileStack,
+  HelpCircle,
+  Info,
   LayoutGrid,
   PlusCircle,
   ShieldCheck,
@@ -29,6 +31,8 @@ const MENU: MenuItem[] = [
   { path: '/apply', label: '申请证书', icon: <PlusCircle size={18} />, badge: 'new' },
   { path: '/account', label: '账号设置', icon: <UserCog size={18} /> },
   { path: '/account/apidoc', label: 'API 文档', icon: <BookOpen size={18} /> },
+  { path: '/help', label: '帮助文档', icon: <HelpCircle size={18} /> },
+  { path: '/about', label: '关于平台', icon: <Info size={18} /> },
 ];
 
 const ADMIN_MENU: MenuItem[] = [

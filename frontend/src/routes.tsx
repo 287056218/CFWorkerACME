@@ -18,6 +18,8 @@ const Apply = lazy(() => import('@pages/Apply'));
 const Order = lazy(() => import('@pages/Order'));
 const Account = lazy(() => import('@pages/Account'));
 const ApiDoc = lazy(() => import('@pages/Account/ApiDoc'));
+const Help = lazy(() => import('@pages/Help'));
+const About = lazy(() => import('@pages/About'));
 const Setup = lazy(() => import('@pages/Setup'));
 const AdminUsers = lazy(() => import('@pages/Admin/Users'));
 const AdminCerts = lazy(() => import('@pages/Admin/Certs'));
@@ -96,6 +98,8 @@ function AppRoutes() {
             <Route path="/order/:uuid" element={<Order />} />
             <Route path="/account" element={<Account />} />
             <Route path="/account/apidoc" element={<ApiDoc />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/about" element={<About />} />
           </Route>
 
           {/* 管理员路由 */}

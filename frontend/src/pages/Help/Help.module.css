@@ -1,0 +1,61 @@
+.container {
+  padding: 24px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.anchor {
+  position: sticky;
+  top: 24px;
+  width: 180px;
+  flex-shrink: 0;
+}
+
+.sectionCard {
+  margin-bottom: 20px;
+}
+
+.sectionCard :global(.ant-card-head-title) {
+  font-weight: 600;
+}
+
+.tagGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+
+.stepItem {
+  margin-bottom: 8px;
+}
+
+.highlight {
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border: 1px solid var(--border-1);
+}
+
+@media (max-width: 860px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .anchor {
+    position: static;
+    width: 100%;
+  }
+}
