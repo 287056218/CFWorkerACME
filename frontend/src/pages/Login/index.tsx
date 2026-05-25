@@ -158,7 +158,6 @@ export default function Login() {
       message.error('请输入邮箱验证码');
       return;
     }
-    if (!validateTurnstile()) return;
     setLoading(true);
     try {
       const ok = await registerUser(email, password, code);
@@ -188,7 +187,6 @@ export default function Login() {
       message.error('请输入邮箱验证码');
       return;
     }
-    if (!validateTurnstile()) return;
     setLoading(true);
     try {
       const ok = await resetPassword(email, password, code);
