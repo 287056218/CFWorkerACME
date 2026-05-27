@@ -10,7 +10,7 @@ import {
   Input,
   InputNumber,
   Modal,
-  Select,
+  Radio,
   Space,
   Table,
   Tag,
@@ -321,29 +321,29 @@ export default function AdminUsersPage() {
           onChange={(e) => setMailFilter(e.target.value)}
           onPressEnter={onSearch}
         />
-        <Select
-          allowClear
-          style={{ width: 140 }}
-          placeholder="状态筛选"
-          value={flagFilter}
-          onChange={setFlagFilter}
-          options={[
-            { value: '0', label: '未激活' },
-            { value: '1', label: '正常' },
-            { value: '2', label: '已禁用' },
-          ]}
-        />
-        <Select
-          allowClear
-          style={{ width: 140 }}
-          placeholder="管理员筛选"
-          value={adminFilter}
-          onChange={setAdminFilter}
-          options={[
-            { value: '1', label: '仅管理员' },
-            { value: '0', label: '仅普通用户' },
-          ]}
-        />
+        <Radio.Group
+          value={flagFilter ?? ''}
+          onChange={(e) => setFlagFilter(e.target.value || undefined)}
+          optionType="button"
+          buttonStyle="solid"
+          size="small"
+        >
+          <Radio.Button value="">全部状态</Radio.Button>
+          <Radio.Button value="0">未激活</Radio.Button>
+          <Radio.Button value="1">正常</Radio.Button>
+          <Radio.Button value="2">已禁用</Radio.Button>
+        </Radio.Group>
+        <Radio.Group
+          value={adminFilter ?? ''}
+          onChange={(e) => setAdminFilter(e.target.value || undefined)}
+          optionType="button"
+          buttonStyle="solid"
+          size="small"
+        >
+          <Radio.Button value="">全部用户</Radio.Button>
+          <Radio.Button value="1">仅管理员</Radio.Button>
+          <Radio.Button value="0">仅普通用户</Radio.Button>
+        </Radio.Group>
         <Button type="primary" icon={<SearchOutlined />} onClick={onSearch}>
           查询
         </Button>
@@ -393,25 +393,21 @@ export default function AdminUsersPage() {
             name="flag"
             rules={[{ required: true }]}
           >
-            <Select
-              options={[
-                { value: '0', label: '未激活' },
-                { value: '1', label: '正常' },
-                { value: '2', label: '已禁用' },
-              ]}
-            />
+            <Radio.Group optionType="button" buttonStyle="solid">
+              <Radio.Button value="0">未激活</Radio.Button>
+              <Radio.Button value="1">正常</Radio.Button>
+              <Radio.Button value="2">已禁用</Radio.Button>
+            </Radio.Group>
           </Form.Item>
           <Form.Item
             label="是否管理员"
             name="is_admin"
             rules={[{ required: true }]}
           >
-            <Select
-              options={[
-                { value: 0, label: '否' },
-                { value: 1, label: '是' },
-              ]}
-            />
+            <Radio.Group optionType="button" buttonStyle="solid">
+              <Radio.Button value={0}>否</Radio.Button>
+              <Radio.Button value={1}>是</Radio.Button>
+            </Radio.Group>
           </Form.Item>
           <Form.Item
             label="证书配额（-1 表示不限制）"

@@ -7,7 +7,7 @@ import {
   Button,
   Input,
   Modal,
-  Select,
+  Radio,
   Space,
   Table,
   Tag,
@@ -15,8 +15,6 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  CheckOutlined,
-  CopyOutlined,
   DeleteOutlined,
   EditOutlined,
   FireOutlined,
@@ -32,7 +30,9 @@ import {
   deleteAdminCert,
   type AdminCert,
 } from '@api/adminCerts';
-import { useCopy } from '@hooks/useCopy';
+import { RevokeReason } from '@api/order';
+import ConfirmIdContent from '@components/molecules/ConfirmIdContent';
+import RevokeReasonSelect from '@components/molecules/RevokeReasonSelect';
 
 const FLAG_OPTIONS = [
   { value: -1, label: '失败', color: 'red' },
@@ -158,34 +158,65 @@ export default function AdminCertsPage() {
     }
   };
 
-  const doRevoke = (r: AdminCert) => {
+  const openDangerConfirm = (opts: {
+    title: string;
+    hint?: string;
+    uuid: string;
+    okText: string;
+    pickRevokeReason?: boolean;
+    run: (reason?: RevokeReason) => Promise<void>;
+  }) => {
+    let matched = false;
+    let reason: RevokeReason = RevokeReason.Unspecified;
     const instance = modal.confirm({
-      title: '吊销证书',
+      title: opts.title,
       icon: null,
+      okText: opts.okText,
+      cancelText: '取消',
       width: 520,
-      content: (
-        <ConfirmIdContent
-          expectId={r.uuid}
-          intro={
-            <>
-              <p style={{ margin: '0 0 6px' }}>
-                即将对该证书发起 ACME 吊销请求。
-              </p>
-              <p style={{ margin: 0, color: '#b45309' }}>
-                不同 CA 对吊销的支持程度不同，失败时会保留原状态。
-              </p>
-            </>
-          }
-          onMatchChange={(matched) =>
-            instance.update({
-              okButtonProps: { danger: true, disabled: !matched },
-            })
-          }
-        />
-      ),
       okButtonProps: { danger: true, disabled: true },
-      okText: '确认吊销',
+      content: (
+        <div>
+          <ConfirmIdContent
+            expectId={opts.uuid}
+            hint={opts.hint}
+            onMatchChange={(m) => {
+              matched = m;
+              instance.update({
+                okButtonProps: { danger: true, disabled: !m },
+              });
+            }}
+          />
+          {opts.pickRevokeReason && (
+            <RevokeReasonSelect
+              onChange={(r) => {
+                reason = r;
+                instance.update({
+                  okButtonProps: { danger: true, disabled: !matched },
+                });
+              }}
+            />
+          )}
+        </div>
+      ),
       onOk: async () => {
+        try {
+          await opts.run(opts.pickRevokeReason ? reason : undefined);
+        } catch {
+          /* 拦截器已 toast */
+        }
+      },
+    });
+  };
+
+  const doRevoke = (r: AdminCert) => {
+    openDangerConfirm({
+      title: '吊销证书',
+      hint: '即将对该证书发起 ACME 吊销请求。不同 CA 对吊销的支持程度不同，失败时会保留原状态。请输入完整订单 ID 并选择吊销原因。',
+      uuid: r.uuid,
+      okText: '确认吊销',
+      pickRevokeReason: true,
+      run: async () => {
         const res: any = await revokeAdminCert(r.uuid);
         if (res?.flags === 0) {
           message.success('已吊销');
@@ -199,31 +230,12 @@ export default function AdminCertsPage() {
   };
 
   const doPurge = (r: AdminCert) => {
-    const instance = modal.confirm({
+    openDangerConfirm({
       title: '清除密钥',
-      icon: null,
-      width: 520,
-      content: (
-        <ConfirmIdContent
-          expectId={r.uuid}
-          intro={
-            <>
-              <p style={{ margin: '0 0 6px' }}>
-                将清除此订单的 keys/cert 字段，下载将被禁用。
-              </p>
-              <p style={{ margin: 0, color: '#b45309' }}>此操作不可恢复。</p>
-            </>
-          }
-          onMatchChange={(matched) =>
-            instance.update({
-              okButtonProps: { danger: true, disabled: !matched },
-            })
-          }
-        />
-      ),
-      okButtonProps: { danger: true, disabled: true },
+      hint: '将清除此订单的 keys/cert 字段，下载将被禁用。此操作不可恢复，请输入完整订单 ID 以确认。',
+      uuid: r.uuid,
       okText: '确认清除',
-      onOk: async () => {
+      run: async () => {
         const res: any = await purgeAdminCert(r.uuid);
         if (res?.flags === 0) {
           message.success('已清除');
@@ -237,28 +249,12 @@ export default function AdminCertsPage() {
   };
 
   const doDelete = (r: AdminCert) => {
-    const instance = modal.confirm({
+    openDangerConfirm({
       title: '删除订单',
-      icon: null,
-      width: 520,
-      content: (
-        <ConfirmIdContent
-          expectId={r.uuid}
-          intro={
-            <p style={{ margin: 0, color: '#b45309' }}>
-              物理删除订单，<b>不可恢复</b>。请在下方输入订单 UUID 二次确认：
-            </p>
-          }
-          onMatchChange={(matched) =>
-            instance.update({
-              okButtonProps: { danger: true, disabled: !matched },
-            })
-          }
-        />
-      ),
-      okButtonProps: { danger: true, disabled: true },
+      hint: '物理删除订单，不可恢复。请输入完整订单 ID 以确认。',
+      uuid: r.uuid,
       okText: '确认删除',
-      onOk: async () => {
+      run: async () => {
         const res: any = await deleteAdminCert(r.uuid);
         if (res?.flags === 0) {
           message.success('已删除');
@@ -405,17 +401,18 @@ export default function AdminCertsPage() {
           onChange={(e) => setDomainFilter(e.target.value)}
           onPressEnter={onSearch}
         />
-        <Select
-          allowClear
-          style={{ width: 140 }}
-          placeholder="状态筛选"
-          value={flagFilter}
-          onChange={setFlagFilter}
-          options={FLAG_OPTIONS.map((o) => ({
-            value: o.value,
-            label: o.label,
-          }))}
-        />
+        <Radio.Group
+          value={flagFilter ?? ''}
+          onChange={(e) => setFlagFilter(e.target.value === '' ? undefined : e.target.value)}
+          optionType="button"
+          buttonStyle="solid"
+          size="small"
+        >
+          <Radio.Button value="">全部状态</Radio.Button>
+          {FLAG_OPTIONS.map((o) => (
+            <Radio.Button key={o.value} value={o.value}>{o.label}</Radio.Button>
+          ))}
+        </Radio.Group>
         <Button type="primary" icon={<SearchOutlined />} onClick={onSearch}>
           查询
         </Button>
@@ -462,15 +459,16 @@ export default function AdminCertsPage() {
             <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>
               新状态
             </div>
-            <Select
+            <Radio.Group
               value={newFlag}
-              onChange={setNewFlag}
-              style={{ width: '100%' }}
-              options={FLAG_OPTIONS.map((o) => ({
-                value: o.value,
-                label: o.label,
-              }))}
-            />
+              onChange={(e) => setNewFlag(e.target.value)}
+              optionType="button"
+              buttonStyle="solid"
+            >
+              {FLAG_OPTIONS.map((o) => (
+                <Radio.Button key={o.value} value={o.value}>{o.label}</Radio.Button>
+              ))}
+            </Radio.Group>
           </div>
           <div>
             <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>
@@ -489,93 +487,4 @@ export default function AdminCertsPage() {
   );
 }
 
-/* ============================================================
- * 内部组件：危险操作确认弹窗内容
- * 显示完整订单 UUID + 一键复制，要求用户手动输入 UUID 才可确认
- * ============================================================ */
-interface ConfirmIdContentProps {
-  expectId: string;
-  intro?: React.ReactNode;
-  onMatchChange: (matched: boolean) => void;
-}
 
-function ConfirmIdContent({
-  expectId,
-  intro,
-  onMatchChange,
-}: ConfirmIdContentProps) {
-  const { copy } = useCopy();
-  const [value, setValue] = useState('');
-  const [copied, setCopied] = useState(false);
-
-  const matched = value.trim() === expectId;
-
-  useEffect(() => {
-    onMatchChange(matched);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matched]);
-
-  const handleCopy = async () => {
-    const ok = await copy(expectId, '订单 UUID 已复制');
-    if (ok) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-      {intro && <div style={{ fontSize: 13, lineHeight: 1.6 }}>{intro}</div>}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '8px 10px',
-          background: 'rgba(0,0,0,0.03)',
-          border: '1px dashed rgba(0,0,0,0.12)',
-          borderRadius: 8,
-        }}
-      >
-        <code
-          style={{
-            flex: 1,
-            minWidth: 0,
-            fontSize: 13,
-            fontWeight: 600,
-            padding: '4px 8px',
-            background: '#fff',
-            borderRadius: 6,
-            overflowX: 'auto',
-            whiteSpace: 'nowrap',
-            userSelect: 'all',
-          }}
-        >
-          {expectId}
-        </code>
-        <Button
-          size="small"
-          icon={copied ? <CheckOutlined /> : <CopyOutlined />}
-          onClick={handleCopy}
-          type={copied ? 'primary' : 'default'}
-          ghost={copied}
-        >
-          {copied ? '已复制' : '复制'}
-        </Button>
-      </div>
-      <Input
-        autoFocus
-        placeholder="粘贴或输入上方订单 UUID"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        status={value && !matched ? 'error' : undefined}
-        allowClear
-      />
-      {value && !matched && (
-        <div style={{ fontSize: 12, color: '#dc2626' }}>
-          UUID 不匹配，请检查后重试
-        </div>
-      )}
-    </div>
-  );
-}

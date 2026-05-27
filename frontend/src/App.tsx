@@ -15,7 +15,11 @@ function App() {
   }, [theme]);
 
   return (
-    <ConfigProvider theme={getAntdTheme(theme)} locale={zhCN}>
+    <ConfigProvider
+      theme={getAntdTheme(theme)}
+      locale={zhCN}
+      getPopupContainer={() => document.body}
+    >
       <AntdApp>
         <HashRouter>
           <AppRoutes />

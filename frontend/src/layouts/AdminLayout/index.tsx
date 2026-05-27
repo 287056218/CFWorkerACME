@@ -41,7 +41,9 @@ export default function AdminLayout() {
           showMenuBtn={isMobile}
         />
         <main className={styles.content}>
-          <Outlet />
+          <div className={styles.scrollArea}>
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

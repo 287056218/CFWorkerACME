@@ -18,6 +18,7 @@ html {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 body {
@@ -28,7 +29,6 @@ body {
   background: var(--bg-base);
   background-image: var(--gradient-bg);
   background-attachment: fixed;
-  overflow-x: hidden;
 }
 
 /* 中文段落使用手写体 */

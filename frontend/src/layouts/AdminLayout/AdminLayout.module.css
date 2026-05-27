@@ -16,6 +16,11 @@
 
 .content {
   flex: 1;
-  overflow: auto;
-  position: relative;
+  overflow: hidden;
+}
+
+.scrollArea {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }

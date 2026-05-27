@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Select } from 'antd';
+import { Radio } from 'antd';
 import { REVOKE_REASON_OPTIONS, RevokeReason } from '@api/order';
 import styles from './RevokeReasonSelect.module.css';
 
@@ -12,7 +12,7 @@ export interface RevokeReasonSelectProps {
 
 /**
  * 证书吊销原因选择器
- * 提供下拉选择 + 当前选项说明
+ * 提供单选按钮组 + 当前选项说明
  */
 export default function RevokeReasonSelect({
   defaultValue = RevokeReason.Unspecified,
@@ -28,19 +28,19 @@ export default function RevokeReasonSelect({
   return (
     <div className={styles.wrap}>
       <div className={styles.label}>吊销原因（可选）</div>
-      <Select
-        className={styles.select}
+      <Radio.Group
         value={value}
-        onChange={(v) => {
-          setValue(v);
-          onChange(v);
+        onChange={(e) => {
+          setValue(e.target.value);
+          onChange(e.target.value);
         }}
-        options={REVOKE_REASON_OPTIONS.map((o) => ({
-          value: o.value,
-          label: o.label,
-        }))}
-        size="middle"
-      />
+      >
+        {REVOKE_REASON_OPTIONS.map((o) => (
+          <Radio key={o.value} value={o.value} style={{ display: 'block', marginBottom: 4 }}>
+            {o.label}
+          </Radio>
+        ))}
+      </Radio.Group>
       {currentDesc && <div className={styles.desc}>{currentDesc}</div>}
     </div>
   );

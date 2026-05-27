@@ -20,7 +20,7 @@ import {
   InputNumber,
   Modal,
   Row,
-  Select,
+  Radio,
   Space,
   Switch,
   Tag,
@@ -314,7 +314,7 @@ export default function AdminSystemPage() {
     );
   };
 
-  /** 渲染 Select 项 */
+  /** 渲染单选项 */
   const renderSelect = (
     name: string,
     label: string,
@@ -332,12 +332,16 @@ export default function AdminSystemPage() {
           {help && <div style={{ fontSize: 12, color: '#6b7280' }}>{help}</div>}
         </Col>
         <Col flex="auto">
-          <Select
+          <Radio.Group
             value={val}
-            style={{ width: 220 }}
-            options={options}
-            onChange={(v) => markDirty(name, v)}
-          />
+            onChange={(e) => markDirty(name, e.target.value)}
+            optionType="button"
+            buttonStyle="solid"
+          >
+            {options.map((o) => (
+              <Radio.Button key={o.value} value={o.value}>{o.label}</Radio.Button>
+            ))}
+          </Radio.Group>
         </Col>
         <Col>
           <ItemActions

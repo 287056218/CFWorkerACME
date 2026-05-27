@@ -82,6 +82,7 @@
   background: var(--bg-panel) !important;
   border-color: var(--line) !important;
   color: var(--text-1) !important;
+  cursor: pointer !important;
 }
 
 .ant-select:hover:not(.ant-select-disabled) .ant-select-selector {
@@ -93,10 +94,13 @@
   box-shadow: 0 0 0 3px var(--brand-soft) !important;
 }
 
+/* 确保 Select 下拉层始终高于 Modal/Drawer 内容与遮罩 */
 .ant-select-dropdown {
   background: var(--bg-panel) !important;
   border: 1px solid var(--line) !important;
   box-shadow: var(--shadow-lg) !important;
+  z-index: 1100 !important;
+  pointer-events: auto !important;
 }
 
 .ant-select-item {
